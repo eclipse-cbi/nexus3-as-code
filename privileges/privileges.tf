@@ -4,7 +4,7 @@ resource "nexus_privilege_repository_view" "privilege_repo" {
     for repo in local.repositories : "${repo.name}-${repo.type}${repo.env != "" ? "-${repo.env}" : ""}" => repo
   }
 
-  name = "${each.value.name}-${each.value.type}${each.value.env != "" ? "-${each.value.env}" : ""}"
+  name = "${each.value.name}-${each.value.type}${each.value.env != "" ? "-${each.value.env}" : ""}-perm"
 
   actions    = ["ADD", "READ", "DELETE", "BROWSE", "EDIT"]
   repository = "${each.value.name}-${each.value.type}${each.value.env != "" ? "-${each.value.env}" : ""}"
@@ -17,7 +17,7 @@ resource "nexus_privilege_repository_view" "privilege_proxies" {
     for proxy in local.proxies : "${proxy.name}-${proxy.type}-proxy" => proxy
   }
 
-  name = "${each.value.name}-${each.value.type}-proxy"
+  name = "${each.value.name}-${each.value.type}-proxy-perm"
 
   actions    = ["ADD", "READ", "DELETE", "BROWSE", "EDIT"]
   repository = "${each.value.name}-${each.value.type}-proxy"
