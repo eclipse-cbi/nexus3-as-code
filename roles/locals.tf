@@ -25,11 +25,11 @@ locals {
       short_code = project.short_code
 
       proxies_roles = [
-        for proxy in project.proxies : "nx-repository-admin-${proxy.type}-${proxy.name}-${proxy.type}-proxy-*"
+        for proxy in project.proxies : "${proxy.name}-${proxy.type}-proxy-perm"
       ]
       repositories_roles = flatten([
         for repo in project.repositories : [
-          for env in repo.env : "nx-repository-admin-${repo.type}-${repo.name}-${repo.type}${env != "" ? "-${env}" : ""}-*"
+          for env in repo.env : "${repo.name}-${repo.type}${env != "" ? "-${env}" : ""}-perm"
         ]
       ])
     }
