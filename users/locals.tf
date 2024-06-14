@@ -11,8 +11,8 @@ locals {
     for project in local.calculated_projects : {
       project_id = project.project_id
       short_code = project.short_code
-      roles_repository : length(project.repositories) > 0 ? ["${project.short_code}-repository-admin"] : []
-      roles_proxy : length(project.proxies) > 0 ? ["${project.short_code}-proxy-admin"] : []
+      roles_repository : length(project.repositories) > 0 ? ["${project.short_code}-repository-bot-role"] : []
+      roles_proxy : length(project.proxies) > 0 ? ["${project.short_code}-proxy-bot-role"] : []
     }
   ]
 }

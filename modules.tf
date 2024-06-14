@@ -31,6 +31,7 @@ module "privileges" {
 module "users" {
   source   = "./users"
   projects = var.projects
+  repo_address = var.repo_address
 }
 
 module "roles" {
