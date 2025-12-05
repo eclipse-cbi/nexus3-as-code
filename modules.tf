@@ -17,9 +17,10 @@ module "proxies" {
 }
 
 module "repositories-group" {
-  source   = "./repositories-group"
-  defaults = var.defaults
-  projects = var.projects
+  source     = "./repositories-group"
+  defaults   = var.defaults
+  projects   = var.projects
+  depends_on = [module.repositories, module.proxies]
 }
 
 module "privileges" {
@@ -28,13 +29,15 @@ module "privileges" {
   depends_on = [module.repositories, module.proxies]
 }
 
+module "roles" {
+  source     = "./roles"
+  projects   = var.projects
+  depends_on = [module.privileges]
+}
+
 module "users" {
   source   = "./users"
   projects = var.projects
   repo_address = var.repo_address
-}
-
-module "roles" {
-  source   = "./roles"
-  projects = var.projects
+  depends_on = [module.roles]
 }

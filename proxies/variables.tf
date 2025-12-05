@@ -81,7 +81,7 @@ variable "default_cleanup_config" {
     policy_names = optional(list(string))
   })
   default = {
-    policy_names = [""]
+    policy_names = null
   }
 }
 
