@@ -1,3 +1,19 @@
+# Check if secret exists in Vault using external data source
+data "external" "check_vault_secret" {
+  for_each = { for project in var.projects : project.project_id => project }
+  
+  program = ["bash", "-c", <<EOF
+    SECRET_PATH="${each.key}/repo3.eclipse.org"
+    if vault kv get -mount=cbi -field=password "$SECRET_PATH" >/dev/null 2>&1; then
+      PASSWORD=$(vault kv get -mount=cbi -field=password "$SECRET_PATH" 2>/dev/null)
+      echo "{\"exists\":\"true\",\"password\":\"$PASSWORD\"}"
+    else
+      echo "{\"exists\":\"false\",\"password\":\"\"}"
+    fi
+EOF
+  ]
+}
+
 resource "random_password" "bot_gen_password" {
   for_each = { for project in var.projects : project.project_id => project }
 
@@ -8,6 +24,15 @@ resource "random_password" "bot_gen_password" {
 locals {
   project_split = {
     for project in var.projects : project.project_id => split(".", project.project_id)
+  }
+  
+  # Use existing password from Vault if available, otherwise use generated password
+  bot_passwords = {
+    for project in var.projects : project.project_id => (
+      data.external.check_vault_secret[project.project_id].result["exists"] == "true"
+      ? data.external.check_vault_secret[project.project_id].result["password"]
+      : random_password.bot_gen_password[project.project_id].result
+    )
   }
 }
 
@@ -39,7 +64,7 @@ resource "nexus_security_user" "bot_user" {
   firstname = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
   lastname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : ""
   email     = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
-  password  = random_password.bot_gen_password[each.key].result
+  password  = local.bot_passwords[each.key]
   roles     = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])
   status    = "active"
   depends_on = [ nexus_security_role.role_bot_token ]
