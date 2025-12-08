@@ -15,7 +15,7 @@ resource "nexus_repository_npm_group" "npm_repositories_group" {
   name = each.value.final_name
 
   group {
-    member_names = concat(
+    member_names = each.value.custom_members != null ? each.value.custom_members : concat(
       each.value.group,
       each.value.proxy_group
     )

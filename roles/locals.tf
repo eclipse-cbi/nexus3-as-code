@@ -2,17 +2,17 @@ locals {
   calculated_repositories = [
     for project in var.projects : {
       project_id = project.project_id
-      short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
+      short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id
       repositories = [
         for repo in try(project.repositories, []) : {
-          name = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+          name = try(repo.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
           type = repo.type
           env  = try(repo.env, [""])
         }
       ]
       proxies = [
         for proxy in try(project.proxies, []) : {
-          name = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+          name = try(proxy.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
           type = proxy.type
         }
       ]

@@ -53,54 +53,43 @@ variable "projects" {
         proxies = [  # Optional: List of proxy repositories
           {
             type = "maven2" | "docker" | "npm" | "pypi" | "helm"  # Proxy type
-            # Same customization options as repositories
+            
+            # Name customization (optional)
+            name                 = "custom-base-name"  # Override base name extraction
+            include_type_in_name = true | false        # Include type in name (default: true)
+            custom_name          = "base-custom-name"  # Base custom name (type added, always ends with "-proxy")
+            
+            # Group configuration (optional)
+            group_suffix      = "central" | "prod" | ""  # Group suffix (default: "central", empty to remove)
+            custom_group_name = "base-group-name"        # Base custom group name (type/suffix can still be added)
+            
+            # Proxy-specific configuration (optional)
+            remote_url = "https://..."  # Remote repository URL
+            storage    = { ... }         # Storage configuration
+            cleanup    = { ... }         # Cleanup policies
           }
         ]
         
-        groups = [  # Optional: Repository groups configuration
+        groups = [  # Optional: Custom repository groups with explicit members
           {
             type = "maven2" | "docker" | "npm" | "pypi"  # Group type
-            # Customization options
+            
+            # Name customization (optional)
+            name                 = "custom-base-name"     # Override base name extraction
+            include_type_in_name = true | false           # Include type in name (default: false for custom groups)
+            custom_name          = "base-custom-name"     # Base custom name (type/suffix can still be added)
+            group_suffix         = "" | "suffix"          # Group suffix (default: empty for custom groups)
+            custom_group_name    = "base-group-name"      # Base custom group name
+            
+            # Member repositories (required for custom groups)
+            members = ["repo1-maven2-staging", "repo2-maven2-staging", ...]  # List of repository names to include
+            
+            # Group-specific configuration (optional)
+            online  = true | false  # Online status (default: true)
+            storage = { ... }       # Storage configuration
           }
         ]
       }
-    ]
-    
-    Examples:
-    1. Simple repository with type in name:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"] }] }
-       → Creates: "mail-maven2-staging" repo and "mail-maven2-central" group
-    
-    2. Repository without type in name:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], include_type_in_name = false }] }
-       → Creates: "mail-staging" repo and "mail-central" group
-    
-    3. Repository without env in name:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], include_env_in_name = false }] }
-       → Creates: "mail-maven2" repo
-    
-    4. Custom base name with type and env:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], custom_name = "myrepo" }] }
-       → Creates: "myrepo-maven2-staging" repo (type and env still added)
-    
-    5. Custom base name without type:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], custom_name = "myrepo", include_type_in_name = false }] }
-       → Creates: "myrepo-staging" repo
-    
-    6. Custom group suffix:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], group_suffix = "prod" }] }
-       → Creates: "mail-maven2-staging" repo and "mail-maven2-prod" group
-    
-    7. No group suffix:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", env = ["staging"], group_suffix = "" }] }
-       → Creates: "mail-maven2-staging" repo and "mail-maven2" group
-    
-    8. Custom group name with type:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", custom_group_name = "mygroup" }] }
-       → Creates group: "mygroup-maven2-central" (type and suffix still added)
-    
-    9. Custom group name without type or suffix:
-       { project_id = "ee4j.mail", repositories = [{ type = "maven2", custom_group_name = "mygroup", include_type_in_name = false, group_suffix = "" }] }
-       → Creates group: "mygroup"
+    ]    
   EOT
 }

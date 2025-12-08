@@ -63,6 +63,7 @@ locals {
 
   combined = flatten(concat(local.transformed_repos, local.transformed_proxies))
 
+  # Standard groups from repositories and proxies
   transformed_repositories_groups = [
     for k, v in { for a in local.combined : a.project_id => a... } :
     {
@@ -75,18 +76,44 @@ locals {
       custom_group_name = try(v[0].custom_group_name, null)
       group       = distinct(flatten([for g in v[*] : g.group if g.type == v[0].type]))
       proxy_group = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
-
+      custom_members = null  # No custom members for auto-generated groups
     }
   ]
+  
+  # Custom groups with explicit members from groups configuration
+  custom_groups = flatten([
+    for project in var.projects : [
+      for group in try(project.groups, []) : {
+        project_id  = project.project_id
+        type        = group.type
+        short_code  = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id
+        base_name   = try(group.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
+        include_type_in_name = try(group.include_type_in_name, false)
+        group_suffix = try(group.group_suffix, "")
+        custom_group_name = try(group.custom_group_name, null)
+        custom_name = try(group.custom_name, null)
+        group       = []
+        proxy_group = []
+        custom_members = try(group.members, null)
+        online = try(group.online, true)
+      } if try(group.members, null) != null  # Only include groups with explicit members
+    ]
+  ])
+  
+  # Merge standard and custom groups
+  all_repositories_groups = concat(local.transformed_repositories_groups, local.custom_groups)
 
   docker_repositories_group = [
-    for groups in local.transformed_repositories_groups :
+    for groups in local.all_repositories_groups :
     merge(var.default_repository_config, try(var.defaults.groups.docker.online, {}), groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)
       
-      # Final group name
+      # Final group name - support custom groups with explicit custom_name
       final_name = (
-        try(groups.custom_group_name, null) != null ? (
+        try(groups.custom_name, null) != null ? (
+          # Custom name from group definition (for custom groups with members)
+          "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+        ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
         ) : try(local.transformed_groups[groups.project_id].docker.custom_name, null) != null ? (
@@ -116,12 +143,15 @@ locals {
   ]
 
   maven_repositories_group = [
-    for groups in local.transformed_repositories_groups : merge(var.default_repository_config, groups, {
+    for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)
       
-      # Final group name
+      # Final group name - support custom groups with explicit custom_name
       final_name = (
-        try(groups.custom_group_name, null) != null ? (
+        try(groups.custom_name, null) != null ? (
+          # Custom name from group definition (for custom groups with members)
+          "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+        ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
         ) : try(local.transformed_groups[groups.project_id].maven2.custom_name, null) != null ? (
@@ -146,12 +176,15 @@ locals {
   ]
 
   npm_repositories_group = [
-    for groups in local.transformed_repositories_groups : merge(var.default_repository_config, groups, {
+    for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)
       
-      # Final group name
+      # Final group name - support custom groups with explicit custom_name
       final_name = (
-        try(groups.custom_group_name, null) != null ? (
+        try(groups.custom_name, null) != null ? (
+          # Custom name from group definition (for custom groups with members)
+          "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+        ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
         ) : try(local.transformed_groups[groups.project_id].npm.custom_name, null) != null ? (
@@ -176,12 +209,15 @@ locals {
   ]
 
   pypi_repositories_group = [
-    for groups in local.transformed_repositories_groups : merge(var.default_repository_config, groups, {
+    for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)
       
-      # Final group name
+      # Final group name - support custom groups with explicit custom_name
       final_name = (
-        try(groups.custom_group_name, null) != null ? (
+        try(groups.custom_name, null) != null ? (
+          # Custom name from group definition (for custom groups with members)
+          "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+        ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
         ) : try(local.transformed_groups[groups.project_id].pypi.custom_name, null) != null ? (

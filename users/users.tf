@@ -62,7 +62,7 @@ resource "nexus_security_user" "bot_user" {
   for_each  = { for project in local.project_transform : project.project_id => project }
   userid    = length(local.project_split[each.key]) > 1 ? "eclipse-${local.project_split[each.key][1]}-bot" : "eclipse-${each.key}-bot"
   firstname = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
-  lastname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : ""
+  lastname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : each.key
   email     = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
   password  = local.bot_passwords[each.key]
   roles     = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])

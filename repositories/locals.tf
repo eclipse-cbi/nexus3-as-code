@@ -1,7 +1,7 @@
 locals {
   transform_repositories = flatten([
     for project in var.projects : [
-      for repo in coalesce(project.repositories, []) : [
+      for repo in try(project.repositories, []) : [
         for env in try(repo.env, [""]) :
         merge(
           var.default_repository_config,
