@@ -9,8 +9,26 @@ locals {
           {
             project_id = project.project_id
             short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
-            name       = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
-            type       = repo.type
+            base_name  = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+            
+            # Name customization attributes
+            include_type_in_name = try(repo.include_type_in_name, true)   # Default: include type in name
+            custom_name          = try(repo.custom_name, null)            # Base custom name (type and "proxy" can still be added)
+            
+            # Final proxy name construction (always includes "-proxy" suffix)
+            name = (
+              try(repo.custom_name, null) != null ? (
+                # With custom_name: add type if requested, always add "-proxy"
+                "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}-proxy"
+              ) : (
+                # Without custom_name: standard name generation with "-proxy"
+                try(repo.include_type_in_name, true) ? 
+                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}-proxy" : 
+                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-proxy"
+              )
+            )
+            
+            type = repo.type
 
             storage = merge(
               var.default_storage_config,

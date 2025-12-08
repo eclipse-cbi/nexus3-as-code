@@ -9,10 +9,10 @@ output "maven_proxies" {
 
 resource "nexus_repository_maven_proxy" "maven-proxies" {
   for_each = {
-    for proxy in local.maven_proxies : "${proxy.name}-${proxy.type}-proxy" => proxy
+    for proxy in local.maven_proxies : proxy.name => proxy
   }
 
-  name = "${each.value.name}-${each.value.type}-proxy"
+  name = each.value.name
 
   online       = each.value.online
   routing_rule = each.value.routing_rule

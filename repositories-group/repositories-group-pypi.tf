@@ -12,7 +12,7 @@ resource "nexus_repository_pypi_group" "pypi_repositories_group" {
     for group in local.pypi_repositories_group : "${group.project_id}-${group.type}" => group
   }
 
-  name = "${each.value.name}-${each.value.type}-central"
+  name = each.value.final_name
 
   group {
     member_names = concat(

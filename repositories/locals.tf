@@ -10,7 +10,25 @@ locals {
           {
             project_id = project.project_id
             short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
-            name       = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+            base_name  = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+            
+            # Name customization attributes
+            include_type_in_name = try(repo.include_type_in_name, true)   # Default: include type in name
+            include_env_in_name  = try(repo.include_env_in_name, true)    # Default: include env in name
+            custom_name          = try(repo.custom_name, null)            # Base custom name (type and env can still be added)
+            
+            # Final repository name construction
+            name = (
+              try(repo.custom_name, null) != null ? (
+                # With custom_name: add type and/or env if requested
+                "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
+              ) : (
+                # Without custom_name: standard name generation
+                try(repo.include_type_in_name, true) ? 
+                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}" : 
+                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
+              )
+            )
 
             env  = env
             type = repo.type

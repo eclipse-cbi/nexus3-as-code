@@ -12,7 +12,7 @@ resource "nexus_repository_npm_group" "npm_repositories_group" {
     for group in local.npm_repositories_group : "${group.project_id}-${group.type}" => group
   }
 
-  name = "${each.value.name}-${each.value.type}-central"
+  name = each.value.final_name
 
   group {
     member_names = concat(

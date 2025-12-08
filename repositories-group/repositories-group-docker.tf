@@ -9,10 +9,10 @@ output "docker_repositories_group" {
 
 resource "nexus_repository_docker_group" "docker_repositories_group" {
   for_each = {
-    for group in local.docker_repositories_group : "${group.name}-${group.type}" => group
+    for group in local.docker_repositories_group : "${group.project_id}.${group.type}" => group
   }
 
-  name = "${each.value.name}-${each.value.type}-central"
+  name = each.value.final_name
 
   group {
     member_names = concat(

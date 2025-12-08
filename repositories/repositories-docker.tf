@@ -9,10 +9,10 @@ output "docker_repositories" {
 
 resource "nexus_repository_docker_hosted" "docker_repositories" {
   for_each = {
-    for repo in local.docker_repositories : "${repo.name}-${repo.type}${repo.env != "" ? "-${repo.env}" : ""}" => repo
+    for repo in local.docker_repositories : repo.name => repo
   }
 
-  name = "${each.value.name}-${each.value.type}${each.value.env != "" ? "-${each.value.env}" : ""}"
+  name = each.value.name
 
   online = each.value.online
 

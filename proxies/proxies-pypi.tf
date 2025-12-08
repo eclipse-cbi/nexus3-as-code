@@ -9,10 +9,10 @@ output "pypi_proxies" {
 
 resource "nexus_repository_pypi_proxy" "pypi-proxies" {
   for_each = {
-    for proxy in local.pypi_proxies : "${proxy.name}-${proxy.type}-proxy" => proxy
+    for proxy in local.pypi_proxies : proxy.name => proxy
   }
 
-  name = "${each.value.name}-${each.value.type}-proxy"
+  name = each.value.name
 
   online       = each.value.online
   routing_rule = each.value.routing_rule

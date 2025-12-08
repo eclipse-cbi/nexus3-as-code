@@ -10,10 +10,10 @@ output "maven_repositories" {
 
 resource "nexus_repository_maven_hosted" "maven_repositories" {
   for_each = {
-    for repo in local.maven_repositories : "${repo.name}-${repo.type}${repo.env != "" ? "-${repo.env}" : ""}" => repo
+    for repo in local.maven_repositories : repo.name => repo
   }
 
-  name = "${each.value.name}-${each.value.type}${each.value.env != "" ? "-${each.value.env}" : ""}"
+  name = each.value.name
 
   online = each.value.online
 

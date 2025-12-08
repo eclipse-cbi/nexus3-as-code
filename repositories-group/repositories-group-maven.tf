@@ -12,7 +12,7 @@ resource "nexus_repository_maven_group" "maven_repositories_group" {
     for group in local.maven_repositories_group : "${group.project_id}-${group.type}" => group
   }
 
-  name = "${each.value.name}-${each.value.type}-central"
+  name = each.value.final_name
 
   group {
     member_names = concat(
