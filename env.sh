@@ -41,7 +41,6 @@ set_env_from_vault() {
     local env_var=$1
     local vault_key=$2
     local vault_path=$3
-    return 1
     echo "🔑 Retrieving $env_var from Vault..."
     value=$(get_vault_secret "$vault_key" "$vault_path")
     
