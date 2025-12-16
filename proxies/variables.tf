@@ -4,6 +4,12 @@ variable "defaults" {
 variable "projects" {
 }
 
+variable "project_blobstores" {
+  description = "Map of project_id to blobstore name"
+  type        = map(string)
+  default     = {}
+}
+
 variable "default_proxies_config" {
   description = "Default configuration for proxies"
   type = object({
@@ -104,6 +110,8 @@ variable "default_negative_cache_config" {
     ttl     = optional(number)
   })
   default = {
+    enabled = true
+    ttl     = 1440
   }
 }
 

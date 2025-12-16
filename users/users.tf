@@ -1,7 +1,7 @@
 # Check if secret exists in Vault using external data source
 data "external" "check_vault_secret" {
   for_each = { for project in var.projects : project.project_id => project }
-  
+
   program = ["bash", "-c", <<EOF
     SECRET_PATH="${each.key}/repo3.eclipse.org"
     if vault kv get -mount=cbi -field=password "$SECRET_PATH" >/dev/null 2>&1; then
@@ -25,7 +25,7 @@ locals {
   project_split = {
     for project in var.projects : project.project_id => split(".", project.project_id)
   }
-  
+
   # Use existing password from Vault if available, otherwise use generated password
   bot_passwords = {
     for project in var.projects : project.project_id => (
@@ -46,8 +46,9 @@ locals {
 
 # PRO Feature: error 404 on local instance
 resource "nexus_security_user_token" "bot_token" {
-  enabled         = true
-  protect_content = true
+  enabled            = true
+  protect_content    = true
+  expiration_enabled = false
 }
 
 resource "nexus_security_role" "role_bot_token" {
@@ -59,37 +60,37 @@ resource "nexus_security_role" "role_bot_token" {
 
 
 resource "nexus_security_user" "bot_user" {
-  for_each  = { for project in local.project_transform : project.project_id => project }
-  userid    = length(local.project_split[each.key]) > 1 ? "eclipse-${local.project_split[each.key][1]}-bot" : "eclipse-${each.key}-bot"
-  firstname = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
-  lastname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : each.key
-  email     = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
-  password  = local.bot_passwords[each.key]
-  roles     = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])
-  status    = "active"
-  depends_on = [ nexus_security_role.role_bot_token ]
+  for_each   = { for project in local.project_transform : project.project_id => project }
+  userid     = length(local.project_split[each.key]) > 1 ? "eclipse-${local.project_split[each.key][1]}-bot" : "eclipse-${each.key}-bot"
+  firstname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
+  lastname   = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : each.key
+  email      = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
+  password   = local.bot_passwords[each.key]
+  roles      = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])
+  status     = "active"
+  depends_on = [nexus_security_role.role_bot_token]
 }
 
 data "external" "bot_user_token" {
-  for_each  = { for project in local.project_transform : project.project_id => project }
+  for_each = { for project in local.project_transform : project.project_id => project }
 
   # https://support.sonatype.com/hc/en-us/articles/213465878-How-to-retrieve-a-user-token-from-Nexus-Repository-using-REST
   program = ["bash", "./users/fetch_user_token.sh"]
 
-#   program = ["bash", "-c", <<EOF
-#     set -x
-#     eval "$(jq -r '@sh "URL=\(.url) USERNAME=\(.username) PASSWORD=\(.password)"')"
+  #   program = ["bash", "-c", <<EOF
+  #     set -x
+  #     eval "$(jq -r '@sh "URL=\(.url) USERNAME=\(.username) PASSWORD=\(.password)"')"
 
-#     RESPONSE=$(curl -u $USERNAME:$PASSWORD -X POST "$URL/api/v2/userTokens/currentUser" -H "Content-Type: application/json" -d '{}')
-#     echo $RESPONSE
-# EOF
-#   ]
+  #     RESPONSE=$(curl -u $USERNAME:$PASSWORD -X POST "$URL/api/v2/userTokens/currentUser" -H "Content-Type: application/json" -d '{}')
+  #     echo $RESPONSE
+  # EOF
+  #   ]
 
-    query = {
-      url = var.repo_address
-      username = nexus_security_user.bot_user[each.key].userid
-      password = nexus_security_user.bot_user[each.key].password
-    }
+  query = {
+    url      = var.repo_address
+    username = nexus_security_user.bot_user[each.key].userid
+    password = nexus_security_user.bot_user[each.key].password
+  }
 }
 
 
@@ -102,9 +103,9 @@ resource "vault_kv_secret_v2" "bot_token_creds" {
   name  = "${each.key}/repo3.eclipse.org"
 
   data_json = jsonencode({
-    username = nexus_security_user.bot_user[each.key].userid
-    password = nexus_security_user.bot_user[each.key].password
-    email    = nexus_security_user.bot_user[each.key].email
+    username       = nexus_security_user.bot_user[each.key].userid
+    password       = nexus_security_user.bot_user[each.key].password
+    email          = nexus_security_user.bot_user[each.key].email
     token-username = data.external.bot_user_token[each.key].result["nameCode"]
     token-password = data.external.bot_user_token[each.key].result["passCode"]
   })

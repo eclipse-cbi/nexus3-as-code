@@ -7,11 +7,12 @@
 # Vault Configuration
 export VAULT_ADDR="https://secretsmanager.eclipse.org"
 # export VAULT_USERNAME="sebastien.heurtematte@eclipse-foundation.org" # Optionally set your LDAP username here
+export VAULT_USERNAME=""
 
 # Check if vault CLI is available
 if ! command -v vault &> /dev/null; then
     echo "❌ Error: vault CLI not found. Please install HashiCorp Vault CLI." >&2
-    return 1 2>/dev/null || exit 1
+    return 1 2>/dev/null
 fi
 
 # Helper function to check if token is valid
@@ -106,7 +107,7 @@ vault_token() {
 }
 # Initialize Vault token
 if ! vault_token; then
-    return 1 2>/dev/null || exit 1
+    return 1 2>/dev/null
 fi
 
 # Export variables for the shell

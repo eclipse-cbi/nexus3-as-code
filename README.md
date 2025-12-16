@@ -15,12 +15,19 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
     - [Project global properties](#project-global-properties)
     - [Configure Projects](#configure-projects)
     - [Configure Repositories](#configure-repositories)
+      - [Basic Example](#basic-example)
+      - [Advanced Maven2 Example with Custom Configuration](#advanced-maven2-example-with-custom-configuration)
     - [Advance Repository Configuration](#advance-repository-configuration)
+      - [Docker Repository Example](#docker-repository-example)
+      - [Available Storage Options](#available-storage-options)
+      - [Available Maven Options](#available-maven-options)
+      - [Available Docker Options](#available-docker-options)
     - [Configure Proxies](#configure-proxies)
     - [Advance Proxy Configuration](#advance-proxy-configuration)
     - [Bot user, Role And Permission](#bot-user-role-and-permission)
       - [Role](#role)
     - [Default values](#default-values)
+
 
 ## Quick start!
 
@@ -98,17 +105,59 @@ But can be overridden by the name attribute.
 | Property Name | Description | Example Value |
 | --- | --- | --- |
 | `type` | The type of the repository. Possible values: `maven2`, `docker`, `pypi`, `npm`, `helm` | `"maven2"` |
-| `env` | Define the env for the repository. E.g: `releases`, `staging`, `production`, `snapshot`, ... | `snapshot` |
+| `env` | Define the env for the repository. E.g: `releases`, `staging`, `production`, `snapshots`, ... | `"releases"` |
 | `name` | Optional: The name of the repository, this don't use `type` and `env` definition, by default see naming convention above. | `"my_test_repo"` |
 
-```yaml
+#### Basic Example
+
+```json
 {
   "project_id": "technology.cbi",
   "repositories": [
       {
-          "type": "maven2"
+          "type": "maven2",
+          "env": "releases"
+      },
+      {
+          "type": "maven2",
+          "env": "snapshots"
+      },
+      {
+          "type": "maven2",
+          "env": "staging"
       }
-  ],
+  ]
+}
+```
+
+#### Advanced Maven2 Example with Custom Configuration
+
+```json
+{
+  "project_id": "technology.cbi",
+  "repositories": [
+      {
+          "type": "maven2",
+          "env": "releases",
+          "maven": {
+              "version_policy": "RELEASE",
+              "layout_policy": "STRICT",
+              "content_disposition": "INLINE"
+          },
+          "storage": {
+              "blob_store_name": "technology-cbi",
+              "strict_content_type_validation": true,
+              "write_policy": "ALLOW"
+          }
+      },
+      {
+          "type": "maven2",
+          "env": "snapshots",
+          "maven": {
+              "version_policy": "SNAPSHOT"
+          }
+      }
+  ]
 }
 ```
 
@@ -116,27 +165,55 @@ But can be overridden by the name attribute.
 
 All repository configurations can be overridden in the configuration file with their corresponding terraform resource values.
 
-E.g for the `nexus_repository_docker_hosted` resource. 
+#### Docker Repository Example
 
+See `nexus_repository_docker_hosted` resource: 
 https://registry.terraform.io/providers/datadrivers/nexus/latest/docs/resources/repository_docker_hosted
 
-```yaml
+```json
 {
   "project_id": "technology.cbi",
   "repositories": [
       {
-          "type": "docker"
-          "docker" {
-            "force_basic_auth" = true
-            "v1_enabled"       = true
+          "type": "docker",
+          "docker": {
+              "force_basic_auth": true,
+              "v1_enabled": true,
+              "http_port": 8080,
+              "https_port": 8443
+          },
+          "storage": {
+              "write_policy": "ALLOW"
           }
-
       }
-  ],
+  ]
 }
 ```
 
-Here, `force_basic_auth` and `v1_enabled` have been changed. 
+#### Available Storage Options
+
+| Property | Description | Values | Default |
+| --- | --- | --- | --- |
+| `blob_store_name` | Blob store to use | string | project blobstore (auto) |
+| `strict_content_type_validation` | Validate content types | true/false | true |
+| `write_policy` | Write policy | "ALLOW", "ALLOW_ONCE", "DENY" | "ALLOW" |
+
+#### Available Maven Options
+
+| Property | Description | Values | Default |
+| --- | --- | --- | --- |
+| `version_policy` | Version policy | "RELEASE", "SNAPSHOT", "MIXED" | "MIXED" |
+| `layout_policy` | Layout policy | "STRICT", "PERMISSIVE" | "STRICT" |
+| `content_disposition` | Content disposition | "INLINE", "ATTACHMENT" | - |
+
+#### Available Docker Options
+
+| Property | Description | Values | Default |
+| --- | --- | --- | --- |
+| `force_basic_auth` | Force basic auth | true/false | false |
+| `v1_enabled` | Enable Docker V1 API | true/false | false |
+| `http_port` | HTTP port | number | - |
+| `https_port` | HTTPS port | number | - |
 
 ### Configure Proxies 
 

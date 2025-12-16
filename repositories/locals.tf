@@ -1,57 +1,59 @@
 locals {
   transform_repositories = flatten([
     for project in var.projects : [
-      for repo in try(project.repositories, []) : [
-        for env in try(repo.env, [""]) :
-        merge(
-          var.default_repository_config,
-          try(var.defaults.repositories[repo.type].online, {}),
-          repo,
-          {
-            project_id = project.project_id
-            short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
-            base_name  = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
-            
-            # Name customization attributes
-            include_type_in_name = try(repo.include_type_in_name, true)   # Default: include type in name
-            include_env_in_name  = try(repo.include_env_in_name, true)    # Default: include env in name
-            custom_name          = try(repo.custom_name, null)            # Base custom name (type and env can still be added)
-            
-            # Final repository name construction
-            name = (
-              try(repo.custom_name, null) != null ? (
-                # With custom_name: add type and/or env if requested
-                "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
+      for repo in try(project.repositories, []) :
+      merge(
+        var.default_repository_config,
+        try(var.defaults.repositories[repo.type].online, {}),
+        repo,
+        {
+          project_id = project.project_id
+          short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
+          base_name  = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+
+          # Name customization attributes
+          include_type_in_name = try(repo.include_type_in_name, true) # Default: include type in name
+          include_env_in_name  = try(repo.include_env_in_name, true)  # Default: include env in name
+          custom_name          = try(repo.custom_name, null)          # Base custom name (type and env can still be added)
+
+          # Final repository name construction
+          name = (
+            try(repo.custom_name, null) != null ? (
+              # With custom_name: add type and/or env if requested
+              "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
               ) : (
-                # Without custom_name: standard name generation
-                try(repo.include_type_in_name, true) ? 
-                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}" : 
-                  "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
-              )
+              # Without custom_name: standard name generation
+              try(repo.include_type_in_name, true) ?
+              "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+              "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
             )
+          )
 
-            env  = env
-            type = repo.type
+          env  = try(repo.env, "")
+          type = repo.type
 
-            storage = merge(
-              var.default_storage_config,
-              try(var.defaults.repositories[repo.type].storage, {}),
-              try(repo.storage, {})
-            )
+          storage = merge(
+            var.default_storage_config,
+            try(var.defaults.repositories[repo.type].storage, {}),
+            # Override blob_store_name with project-specific blobstore if available and not explicitly set
+            length(var.project_blobstores) > 0 && lookup(var.project_blobstores, project.project_id, null) != null && try(repo.storage.blob_store_name, null) == null ? {
+              blob_store_name = var.project_blobstores[project.project_id]
+            } : {},
+            try(repo.storage, {})
+          )
 
-            cleanup = merge(
-              var.default_cleanup_config,
-              try(var.defaults.repositories[repo.type].cleanup, {}),
-              try(repo.cleanup, {})
-            )
+          cleanup = merge(
+            var.default_cleanup_config,
+            try(var.defaults.repositories[repo.type].cleanup, {}),
+            try(repo.cleanup, {})
+          )
 
-            component = merge(
-              var.default_component_config,
-              try(var.defaults.repositories[repo.type].component, {}),
-              try(repo.component, {})
-            )
-        })
-      ]
+          component = merge(
+            var.default_component_config,
+            try(var.defaults.repositories[repo.type].component, {}),
+            try(repo.component, {})
+          )
+      })
     ]
   ])
 

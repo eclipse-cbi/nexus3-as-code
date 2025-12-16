@@ -10,51 +10,50 @@ locals {
 
   transformed_repos = [
     for project in var.projects : flatten([
-      for repo in try(project.repositories, []) : [
-        for env in try(repo.env, [""]) : {
-          project_id  = project.project_id
-          type        = repo.type
-          base_name   = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
-          include_type_in_name = try(repo.include_type_in_name, true)
-          include_env_in_name  = try(repo.include_env_in_name, true)
-          custom_name          = try(repo.custom_name, null)
-          group_suffix         = try(repo.group_suffix, "central")
-          custom_group_name    = try(repo.custom_group_name, null)
-          group       = [(
-            try(repo.custom_name, null) != null ? (
-              "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
+      for repo in try(project.repositories, []) : {
+        project_id           = project.project_id
+        type                 = repo.type
+        base_name            = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        include_type_in_name = try(repo.include_type_in_name, true)
+        include_env_in_name  = try(repo.include_env_in_name, true)
+        custom_name          = try(repo.custom_name, null)
+        group_suffix         = try(repo.group_suffix, "central")
+        custom_group_name    = try(repo.custom_group_name, null)
+        env                  = try(repo.env, "")
+        group = [(
+          try(repo.custom_name, null) != null ? (
+            "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
             ) : (
-              try(repo.include_type_in_name, true) ? 
-                "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}" : 
-                "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && env != "" ? "-${env}" : ""}"
-            )
-          )]
-          proxy_group = []
-        }
-      ]
+            try(repo.include_type_in_name, true) ?
+            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+          )
+        )]
+        proxy_group = []
+      }
     ])
   ]
 
   transformed_proxies = [
     for project in var.projects : [
       for proxy in try(project.proxies, []) : {
-        project_id  = project.project_id
-        type        = proxy.type
-        base_name   = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        project_id           = project.project_id
+        type                 = proxy.type
+        base_name            = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
         include_type_in_name = try(proxy.include_type_in_name, true)
         custom_name          = try(proxy.custom_name, null)
         group_suffix         = try(proxy.group_suffix, "central")
         custom_group_name    = try(proxy.custom_group_name, null)
-        group       = []
+        group                = []
         proxy_group = [(
           try(proxy.custom_name, null) != null ? (
             # With custom_name: add type if requested, always add "-proxy"
             "${proxy.custom_name}${try(proxy.include_type_in_name, true) ? "-${proxy.type}" : ""}-proxy"
-          ) : (
+            ) : (
             # Without custom_name: standard name generation with "-proxy"
-            try(proxy.include_type_in_name, true) ? 
-              "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${proxy.type}-proxy" : 
-              "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-proxy"
+            try(proxy.include_type_in_name, true) ?
+            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${proxy.type}-proxy" :
+            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-proxy"
           )
         )]
       }
@@ -67,39 +66,39 @@ locals {
   transformed_repositories_groups = [
     for k, v in { for a in local.combined : a.project_id => a... } :
     {
-      project_id  = k
-      type        = v[0].type
-      short_code  = length(split(".", k)) > 1 ? split(".", k)[1] : ""
-      base_name   = try(v[0].base_name, length(split(".", k)) > 1 ? split(".", k)[1] : "")
+      project_id           = k
+      type                 = v[0].type
+      short_code           = length(split(".", k)) > 1 ? split(".", k)[1] : ""
+      base_name            = try(v[0].base_name, length(split(".", k)) > 1 ? split(".", k)[1] : "")
       include_type_in_name = try(v[0].include_type_in_name, true)
-      group_suffix = try(v[0].group_suffix, "central")  # Default suffix "central"
-      custom_group_name = try(v[0].custom_group_name, null)
-      group       = distinct(flatten([for g in v[*] : g.group if g.type == v[0].type]))
-      proxy_group = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
-      custom_members = null  # No custom members for auto-generated groups
+      group_suffix         = try(v[0].group_suffix, "central") # Default suffix "central"
+      custom_group_name    = try(v[0].custom_group_name, null)
+      group                = distinct(flatten([for g in v[*] : g.group if g.type == v[0].type]))
+      proxy_group          = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
+      custom_members       = null # No custom members for auto-generated groups
     }
   ]
-  
+
   # Custom groups with explicit members from groups configuration
   custom_groups = flatten([
     for project in var.projects : [
       for group in try(project.groups, []) : {
-        project_id  = project.project_id
-        type        = group.type
-        short_code  = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id
-        base_name   = try(group.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
+        project_id           = project.project_id
+        type                 = group.type
+        short_code           = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id
+        base_name            = try(group.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
         include_type_in_name = try(group.include_type_in_name, false)
-        group_suffix = try(group.group_suffix, "")
-        custom_group_name = try(group.custom_group_name, null)
-        custom_name = try(group.custom_name, null)
-        group       = []
-        proxy_group = []
-        custom_members = try(group.members, null)
-        online = try(group.online, true)
-      } if try(group.members, null) != null  # Only include groups with explicit members
+        group_suffix         = try(group.group_suffix, "")
+        custom_group_name    = try(group.custom_group_name, null)
+        custom_name          = try(group.custom_name, null)
+        group                = []
+        proxy_group          = []
+        custom_members       = try(group.members, null)
+        online               = try(group.online, true)
+      } if try(group.members, null) != null # Only include groups with explicit members
     ]
   ])
-  
+
   # Merge standard and custom groups
   all_repositories_groups = concat(local.transformed_repositories_groups, local.custom_groups)
 
@@ -107,23 +106,23 @@ locals {
     for groups in local.all_repositories_groups :
     merge(var.default_repository_config, try(var.defaults.groups.docker.online, {}), groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)
-      
+
       # Final group name - support custom groups with explicit custom_name
       final_name = (
         try(groups.custom_name, null) != null ? (
           # Custom name from group definition (for custom groups with members)
           "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(groups.custom_group_name, null) != null ? (
+          ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(local.transformed_groups[groups.project_id].docker.custom_name, null) != null ? (
+          ) : try(local.transformed_groups[groups.project_id].docker.custom_name, null) != null ? (
           # With custom_name from groups config
           "${local.transformed_groups[groups.project_id].docker.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : (
+          ) : (
           # Standard name generation
           groups.group_suffix != "" && groups.group_suffix != null ? (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)}-${groups.type}-${groups.group_suffix}" : "${coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)}-${groups.group_suffix}"
-          ) : (
+            ) : (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)}-${groups.type}" : coalesce(try(local.transformed_groups[groups.project_id].docker.name, null), groups.short_code)
           )
         )
@@ -137,7 +136,11 @@ locals {
       storage = merge(
         var.default_storage_config,
         try(var.defaults.groups.docker.storage, {}),
-        try(local.transformed_groups[groups.project_id].docker.storage, {})
+        try(local.transformed_groups[groups.project_id].docker.storage, {}),
+        # Override blob_store_name with project-specific blobstore if available
+        length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
+          blob_store_name = var.project_blobstores[groups.project_id]
+        } : {}
       )
     }) if groups.type == "docker"
   ]
@@ -145,32 +148,36 @@ locals {
   maven_repositories_group = [
     for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)
-      
+
       # Final group name - support custom groups with explicit custom_name
       final_name = (
         try(groups.custom_name, null) != null ? (
           # Custom name from group definition (for custom groups with members)
           "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(groups.custom_group_name, null) != null ? (
+          ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(local.transformed_groups[groups.project_id].maven2.custom_name, null) != null ? (
+          ) : try(local.transformed_groups[groups.project_id].maven2.custom_name, null) != null ? (
           # With custom_name from groups config
           "${local.transformed_groups[groups.project_id].maven2.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : (
+          ) : (
           # Standard name generation
           groups.group_suffix != "" && groups.group_suffix != null ? (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)}-${groups.type}-${groups.group_suffix}" : "${coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)}-${groups.group_suffix}"
-          ) : (
+            ) : (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)}-${groups.type}" : coalesce(try(local.transformed_groups[groups.project_id].maven2.name, null), groups.short_code)
           )
         )
       )
-      
+
       storage = merge(
         var.default_storage_config,
         try(var.defaults.groups.maven2.storage, {}),
-        try(local.transformed_groups[groups.project_id].maven2.storage, {})
+        try(local.transformed_groups[groups.project_id].maven2.storage, {}),
+        # Override blob_store_name with project-specific blobstore if available
+        length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
+          blob_store_name = var.project_blobstores[groups.project_id]
+        } : {}
       )
     }) if groups.type == "maven2"
   ]
@@ -178,32 +185,36 @@ locals {
   npm_repositories_group = [
     for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)
-      
+
       # Final group name - support custom groups with explicit custom_name
       final_name = (
         try(groups.custom_name, null) != null ? (
           # Custom name from group definition (for custom groups with members)
           "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(groups.custom_group_name, null) != null ? (
+          ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(local.transformed_groups[groups.project_id].npm.custom_name, null) != null ? (
+          ) : try(local.transformed_groups[groups.project_id].npm.custom_name, null) != null ? (
           # With custom_name from groups config
           "${local.transformed_groups[groups.project_id].npm.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : (
+          ) : (
           # Standard name generation
           groups.group_suffix != "" && groups.group_suffix != null ? (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)}-${groups.type}-${groups.group_suffix}" : "${coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)}-${groups.group_suffix}"
-          ) : (
+            ) : (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)}-${groups.type}" : coalesce(try(local.transformed_groups[groups.project_id].npm.name, null), groups.short_code)
           )
         )
       )
-      
+
       storage = merge(
         var.default_storage_config,
         try(var.defaults.groups.npm.storage, {}),
-        try(local.transformed_groups[groups.project_id].npm.storage, {})
+        try(local.transformed_groups[groups.project_id].npm.storage, {}),
+        # Override blob_store_name with project-specific blobstore if available
+        length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
+          blob_store_name = var.project_blobstores[groups.project_id]
+        } : {}
       )
     }) if groups.type == "npm"
   ]
@@ -211,32 +222,36 @@ locals {
   pypi_repositories_group = [
     for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
       base_name = coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)
-      
+
       # Final group name - support custom groups with explicit custom_name
       final_name = (
         try(groups.custom_name, null) != null ? (
           # Custom name from group definition (for custom groups with members)
           "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(groups.custom_group_name, null) != null ? (
+          ) : try(groups.custom_group_name, null) != null ? (
           # With custom_group_name: add type and/or suffix if requested
           "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : try(local.transformed_groups[groups.project_id].pypi.custom_name, null) != null ? (
+          ) : try(local.transformed_groups[groups.project_id].pypi.custom_name, null) != null ? (
           # With custom_name from groups config
           "${local.transformed_groups[groups.project_id].pypi.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
-        ) : (
+          ) : (
           # Standard name generation
           groups.group_suffix != "" && groups.group_suffix != null ? (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)}-${groups.type}-${groups.group_suffix}" : "${coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)}-${groups.group_suffix}"
-          ) : (
+            ) : (
             groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)}-${groups.type}" : coalesce(try(local.transformed_groups[groups.project_id].pypi.name, null), groups.short_code)
           )
         )
       )
-      
+
       storage = merge(
         var.default_storage_config,
         try(var.defaults.groups.pypi.storage, {}),
-        try(local.transformed_groups[groups.project_id].pypi.storage, {})
+        try(local.transformed_groups[groups.project_id].pypi.storage, {}),
+        # Override blob_store_name with project-specific blobstore if available
+        length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
+          blob_store_name = var.project_blobstores[groups.project_id]
+        } : {}
       )
     }) if groups.type == "pypi"
   ]

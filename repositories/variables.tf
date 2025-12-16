@@ -4,6 +4,12 @@ variable "defaults" {
 variable "projects" {
 }
 
+variable "project_blobstores" {
+  description = "Map of project_id to blobstore name"
+  type        = map(string)
+  default     = {}
+}
+
 variable "default_repository_config" {
   description = "Default configuration for repositories"
   type = object({

@@ -499,12 +499,14 @@ variable "projects" {
     repositories = optional(list(object({
       name = optional(string)
       type = optional(string)
-      env  = optional(list(string))
+      env  = optional(string) # Changed from list to single string
 
       docker = optional(object({
         force_basic_auth = optional(bool)
         v1_enabled       = optional(bool)
         subdomain        = optional(string)
+        http_port        = optional(number)
+        https_port       = optional(number)
       }))
 
       docker_proxy = optional(object({
@@ -520,6 +522,7 @@ variable "projects" {
       storage = optional(object({
         blob_store_name                = optional(string)
         strict_content_type_validation = optional(bool)
+        write_policy                   = optional(string)
       }))
 
       cleanup = optional(object({
