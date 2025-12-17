@@ -135,7 +135,18 @@ echo -n "$user_token"
 
 eval "$(jq -r '@sh "repo_url=\(.url) username=\(.username) password=\(.password)"')"
 
-user_token="$(fetch_user_token "$repo_url" "$username" "$password")"
-echo -n "$user_token"
+# Return empty valid JSON if credentials are missing
+if [[ -z "$username" || -z "$password" ]]; then
+  echo '{"nameCode": "","passCode": ""}'
+  exit 0
+fi
 
-# echo '{"nameCode": "test","passCode": "test"}'
+user_token="$(fetch_user_token "$repo_url" "$username" "$password")"
+
+# Validate JSON and return empty object if invalid
+if echo "$user_token" | jq -e . >/dev/null 2>&1; then
+  echo -n "$user_token"
+else
+  # Return empty valid JSON if token doesn't exist or API returns error
+  echo '{"nameCode": "","passCode": ""}'
+fi

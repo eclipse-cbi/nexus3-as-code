@@ -1,1 +1,1 @@
-namespace="repo-eclipse-org"
+namespace="repo3-eclipse-org"

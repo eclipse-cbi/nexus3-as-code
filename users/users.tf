@@ -31,7 +31,7 @@ locals {
     for project in var.projects : project.project_id => (
       data.external.check_vault_secret[project.project_id].result["exists"] == "true"
       ? data.external.check_vault_secret[project.project_id].result["password"]
-      : random_password.bot_gen_password[project.project_id].result
+      : try(random_password.bot_gen_password[project.project_id].result, "temporary-password-for-import")
     )
   }
 }
@@ -88,9 +88,11 @@ data "external" "bot_user_token" {
 
   query = {
     url      = var.repo_address
-    username = nexus_security_user.bot_user[each.key].userid
-    password = nexus_security_user.bot_user[each.key].password
+    username = try(nexus_security_user.bot_user[each.key].userid, "")
+    password = try(nexus_security_user.bot_user[each.key].password, "")
   }
+  
+  depends_on = [nexus_security_user.bot_user]
 }
 
 

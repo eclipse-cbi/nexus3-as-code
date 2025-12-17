@@ -77,6 +77,8 @@ locals {
       proxy_group          = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
       custom_members       = null # No custom members for auto-generated groups
     }
+    # Filter out projects that have create_groups = false
+    if try([for project in var.projects : project.create_groups if project.project_id == k][0], true) != false
   ]
 
   # Custom groups with explicit members from groups configuration
@@ -96,7 +98,7 @@ locals {
         custom_members       = try(group.members, null)
         online               = try(group.online, true)
       } if try(group.members, null) != null # Only include groups with explicit members
-    ]
+    ] if try(project.create_groups, true) != false # Skip projects with create_groups = false
   ])
 
   # Merge standard and custom groups

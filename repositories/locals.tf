@@ -36,9 +36,15 @@ locals {
             var.default_storage_config,
             try(var.defaults.repositories[repo.type].storage, {}),
             # Override blob_store_name with project-specific blobstore if available and not explicitly set
-            length(var.project_blobstores) > 0 && lookup(var.project_blobstores, project.project_id, null) != null && try(repo.storage.blob_store_name, null) == null ? {
-              blob_store_name = var.project_blobstores[project.project_id]
-            } : {},
+            try(repo.storage.blob_store_name, null) == null ? (
+              try(project.blobstore_name, null) != null ? {
+                blob_store_name = project.blobstore_name
+              } : (
+                length(var.project_blobstores) > 0 && lookup(var.project_blobstores, project.project_id, null) != null ? {
+                  blob_store_name = var.project_blobstores[project.project_id]
+                } : {}
+              )
+            ) : {},
             try(repo.storage, {})
           )
 
@@ -87,6 +93,25 @@ locals {
 
   pypi_repositories = [
     for repo in local.transform_repositories : repo if repo != null && repo.type == "pypi"
+  ]
+
+  apt_repositories = [
+    for repo in local.transform_repositories : merge(repo, {
+      apt = merge(
+        {
+          distribution = "bionic"
+        },
+        try(var.defaults.repositories.apt.apt, {}),
+        try(repo.apt, {})
+      )
+      apt_signing = try(repo.apt_signing, {})
+      component = merge(
+        {
+          proprietary_components = true
+        },
+        try(repo.component, {})
+      )
+    }) if repo != null && repo.type == "apt"
   ]
 
 }
