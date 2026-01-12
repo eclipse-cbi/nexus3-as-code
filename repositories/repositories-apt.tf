@@ -43,7 +43,7 @@ resource "nexus_repository_apt_hosted" "apt_repositories" {
   signing {
     keypair = try(
       each.value.apt_signing.keypair,
-      lookup(data.vault_kv_secret_v2.apt_gpg_secrets[each.key].data, "secret-subkeys.asc", null)
+      lookup(data.vault_kv_secret_v2.apt_gpg_secrets[each.key].data, "secret-keys.asc", null)
     )
     passphrase = try(
       each.value.apt_signing.passphrase,
