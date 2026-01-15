@@ -10,6 +10,13 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 check-vars:
+	@if [ -z "$(NEXUS_ENV)" ]; then \
+		echo "❌ ENV variable NEXUS_ENV is missing !"; \
+		echo "📝 run first source .env.sh"; \
+		exit 1; \
+	else \
+		echo "✅ ENV $(NEXUS_ENV)."; \
+	fi
 	@if [ ! -f $(TF_VAR_FILE) ]; then \
 		echo "❌ File $(TF_VAR_FILE) missing !"; \
 		echo "📝 Copy terraform.tfvars.example to $(TF_VAR_FILE) and configure it"; \
