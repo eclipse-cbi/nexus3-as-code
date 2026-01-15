@@ -28,7 +28,7 @@ resource "nexus_repository_apt_hosted" "apt_repositories" {
   name   = each.value.name
   online = each.value.online
 
-  distribution = each.value.apt.distribution
+  distribution = each.value.distribution
 
   storage {
     blob_store_name                = each.value.storage.blob_store_name

@@ -96,22 +96,7 @@ locals {
   ]
 
   apt_repositories = [
-    for repo in local.transform_repositories : merge(repo, {
-      apt = merge(
-        {
-          distribution = "bionic"
-        },
-        try(var.defaults.repositories.apt.apt, {}),
-        try(repo.apt, {})
-      )
-      apt_signing = try(repo.apt_signing, {})
-      component = merge(
-        {
-          proprietary_components = true
-        },
-        try(repo.component, {})
-      )
-    }) if repo != null && repo.type == "apt"
+    for repo in local.transform_repositories : repo if repo != null && repo.type == "apt"
   ]
 
 }
