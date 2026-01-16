@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-export VAULT_TOKEN=""
-export NEXUS_USERNAME=""
-export NEXUS_PASSWORD=""
-export NEXUS_ENV=""
+vaultctl login 
+eval $(vaultctl export-vault)
+eval $(vaultctl export-users-cbi NEXUS_USERNAME NEXUS_PASSWORD)
+export NEXUS_ENV="prod"

@@ -9,13 +9,6 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
     - [Install terraform](#install-terraform)
     - [ENV preparation](#env-preparation)
     - [Init project](#init-project)
-    - [Init workspace](#init-workspace)
-    - [Plan and apply](#plan-and-apply)
-  - [Configuring Nexus instance per env](#configuring-nexus-instance-per-env)
-    - [Project global properties](#project-global-properties)
-    - [Configure Projects](#configure-projects)
-    - [Configure Repositories](#configure-repositories)
-      - [Basic Example](#basic-example)
       - [Advanced Maven2 Example with Custom Configuration](#advanced-maven2-example-with-custom-configuration)
     - [Advance Repository Configuration](#advance-repository-configuration)
       - [Docker Repository Example](#docker-repository-example)
@@ -50,6 +43,12 @@ kubectx okd-cX
 terraform init -backend-config=./backend/backend.${NEXUS_ENV}.hcl
 ```
 
+or 
+
+```shell
+make init
+``
+
 ### Init workspace
 
 ```shell
@@ -62,12 +61,25 @@ or
 tf workspace select "${NEXUS_ENV}"
 ```
 
+or 
+
+```shell
+make select
+``
+
 ### Plan and apply
 
 ```shell
 tf plan -var-file="terraform.${NEXUS_ENV}.tfvars.json"
 tf apply -var-file="terraform.${NEXUS_ENV}.tfvars.json"
 ```
+
+or 
+
+```shell
+make plan
+make apply
+``
 
 ## Configuring Nexus instance per env
 

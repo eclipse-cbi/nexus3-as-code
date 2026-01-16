@@ -10,19 +10,51 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 check-vars:
-	@if [ -z "$(NEXUS_ENV)" ]; then \
-		echo "❌ ENV variable NEXUS_ENV is missing !"; \
-		echo "📝 run first source .env.sh"; \
+	@echo "🔍 Checking prerequisites..."
+	@errors=0; \
+	env_vars="NEXUS_ENV NEXUS_USERNAME NEXUS_PASSWORD"; \
+	for var in $$env_vars; do \
+		eval value=\$$$$var; \
+		if [ -z "$$value" ]; then \
+			echo "  ❌ $$var environment variable is not set"; \
+			errors=$$((errors + 1)); \
+		else \
+			if [ "$$var" = "VAULT_ENV" ]; then \
+				echo "  ✅ $$var=$$value"; \
+			else \
+				echo "  ✅ $$var is set"; \
+			fi; \
+		fi; \
+	done; \
+	\
+	if [ ! -f $(TF_VAR_FILE) ]; then \
+		echo "  ❌ Configuration file $(TF_VAR_FILE) not found"; \
+		echo "     💡 Tip: Copy terraform.tfvars.example to $(TF_VAR_FILE) and configure it"; \
+		errors=$$((errors + 1)); \
+	else \
+		echo "  ✅ Configuration file $(TF_VAR_FILE) found"; \
+	fi; \
+	\
+	if ! command -v terraform >/dev/null 2>&1; then \
+		echo "  ❌ Terraform is not installed or not in PATH"; \
+		errors=$$((errors + 1)); \
+	else \
+		echo "  ✅ Terraform is installed $$(terraform version -json | jq .terraform_version)"; \
+	fi; \
+	\
+	if [ -n "$(NEXUS_ENV)" ] && [ -f ./backend/backend.$(NEXUS_ENV).hcl ]; then \
+		echo "  ✅ Backend configuration file found"; \
+	elif [ -n "$(NEXUS_ENV)" ]; then \
+		echo "  ❌ Backend configuration file ./backend/backend.$(NEXUS_ENV).hcl not found"; \
+		errors=$$((errors + 1)); \
+	fi; \
+	\
+	echo ""; \
+	if [ $$errors -gt 0 ]; then \
+		echo "❌ Prerequisites check failed with $$errors error(s)"; \
 		exit 1; \
 	else \
-		echo "✅ ENV $(NEXUS_ENV)."; \
-	fi
-	@if [ ! -f $(TF_VAR_FILE) ]; then \
-		echo "❌ File $(TF_VAR_FILE) missing !"; \
-		echo "📝 Copy terraform.tfvars.example to $(TF_VAR_FILE) and configure it"; \
-		exit 1; \
-	else \
-		echo "✅ File $(TF_VAR_FILE) found."; \
+		echo "✅ All prerequisites are satisfied"; \
 	fi
 
 init:
