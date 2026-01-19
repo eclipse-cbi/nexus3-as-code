@@ -1,6 +1,7 @@
 # Check if secret exists in Vault using external data source
+# Exclude archived projects from user creation
 data "external" "check_vault_secret" {
-  for_each = { for project in var.projects : project.project_id => project }
+  for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
   program = ["bash", "-c", <<EOF
     SECRET_PATH="${each.key}/repo3.eclipse.org"
@@ -15,7 +16,7 @@ EOF
 }
 
 resource "random_password" "bot_gen_password" {
-  for_each = { for project in var.projects : project.project_id => project }
+  for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
   length  = 16
   special = true
@@ -27,12 +28,13 @@ locals {
   }
 
   # Use existing password from Vault if available, otherwise use generated password
+  # Exclude archived projects
   bot_passwords = {
     for project in var.projects : project.project_id => (
       data.external.check_vault_secret[project.project_id].result["exists"] == "true"
       ? data.external.check_vault_secret[project.project_id].result["password"]
       : try(random_password.bot_gen_password[project.project_id].result, "temporary-password-for-import")
-    )
+    ) if !try(project.archived, false)
   }
 }
 
@@ -98,7 +100,7 @@ data "external" "bot_user_token" {
 
 resource "vault_kv_secret_v2" "bot_token_creds" {
   for_each = {
-    for project in var.projects : project.project_id => project
+    for project in var.projects : project.project_id => project if !try(project.archived, false)
   }
 
   mount = "cbi"
