@@ -118,6 +118,12 @@ variable "projects" {
         # Blobstore configuration (optional)
         blobstore_soft_quota_limit = 45  # Soft quota limit in GB (default: 45)
         blobstore_soft_quota_type  = "spaceUsedQuota"  # Quota type (default: spaceUsedQuota)
+        
+        # Archived project flag (optional)
+        archived = true | false  # If true, no bot user will be created for this project (default: false)
+        
+        # Automatic group creation control (optional)
+        create_group_auto = true | false  # If true, automatic repository groups will be created (default: false)
       }
     ]
     
