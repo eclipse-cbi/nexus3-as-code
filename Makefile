@@ -2,16 +2,27 @@
 .PHONY: help init plan apply destroy validate fmt clean status outputs
 
 # Variables
-
 TF_VAR_FILE ?= terraform.$(NEXUS_ENV).tfvars.json
+
 
 help:
 	@echo "Available command :"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 check-vars:
-	@echo "🔍 Checking prerequisites..."
-	@errors=0; \
+	echo "🔍 Checking prerequisites..."; \
+	if command -v vault >/dev/null 2>&1; then \
+		if vault token lookup >/dev/null 2>&1; then \
+			echo "  ✅ Vault connection successful"; \
+		else \
+			echo "  ❌ Vault token is invalid or expired"; \
+			echo "     💡 Tip: Run 'vault login' or source .env.sh"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "  ⚠️  Vault CLI not found (optional)"; \
+	fi; \
+	errors=0; \
 	env_vars="NEXUS_ENV NEXUS_USERNAME NEXUS_PASSWORD"; \
 	for var in $$env_vars; do \
 		eval value=\$$$$var; \
