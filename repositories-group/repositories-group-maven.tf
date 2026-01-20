@@ -27,4 +27,10 @@ resource "nexus_repository_maven_group" "maven_repositories_group" {
     blob_store_name                = each.value.storage.blob_store_name
     strict_content_type_validation = each.value.storage.strict_content_type_validation
   }
+  
+  maven {
+    version_policy      = each.value.maven.version_policy
+    layout_policy       = each.value.maven.layout_policy
+    content_disposition = each.value.maven.content_disposition
+  }
 }

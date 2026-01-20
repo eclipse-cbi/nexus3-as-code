@@ -17,7 +17,7 @@ locals {
         include_type_in_name = try(repo.include_type_in_name, true)
         include_env_in_name  = try(repo.include_env_in_name, true)
         custom_name          = try(repo.custom_name, null)
-        group_suffix         = try(repo.group_suffix, "central")
+        group_suffix         = try(repo.group_suffix, "")
         custom_group_name    = try(repo.custom_group_name, null)
         env                  = try(repo.env, "")
         group = [(
@@ -42,7 +42,7 @@ locals {
         base_name            = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
         include_type_in_name = try(proxy.include_type_in_name, true)
         custom_name          = try(proxy.custom_name, null)
-        group_suffix         = try(proxy.group_suffix, "central")
+        group_suffix         = try(proxy.group_suffix, "")
         custom_group_name    = try(proxy.custom_group_name, null)
         group                = []
         proxy_group = [(
@@ -71,7 +71,7 @@ locals {
       short_code           = length(split(".", k)) > 1 ? split(".", k)[1] : ""
       base_name            = try(v[0].base_name, length(split(".", k)) > 1 ? split(".", k)[1] : "")
       include_type_in_name = try(v[0].include_type_in_name, true)
-      group_suffix         = try(v[0].group_suffix, "central") # Default suffix "central"
+      group_suffix         = try(v[0].group_suffix, "")
       custom_group_name    = try(v[0].custom_group_name, null)
       group                = distinct(flatten([for g in v[*] : g.group if g.type == v[0].type]))
       proxy_group          = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
@@ -180,6 +180,12 @@ locals {
         length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
           blob_store_name = var.project_blobstores[groups.project_id]
         } : {}
+      )
+
+      maven = merge(
+        var.default_maven_config,
+        try(var.defaults.repositories.maven2.maven, {}),
+        try(groups.maven2, {})
       )
     }) if groups.type == "maven2"
   ]

@@ -47,3 +47,15 @@ variable "default_storage_config" {
   }
 }
 
+variable "default_maven_config" {
+  description = "Default configuration for Maven repositories"
+  type = object({
+    version_policy      = string
+    layout_policy       = string
+    content_disposition = optional(string)
+  })
+  default = {
+    version_policy = "MIXED"
+    layout_policy  = "STRICT"
+  }
+}

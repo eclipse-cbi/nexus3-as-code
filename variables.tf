@@ -38,7 +38,7 @@ variable "projects" {
             custom_name          = "base-custom-name"  # Base custom name (type/env can still be added)
             
             # Group configuration (optional)
-            group_suffix      = "central" | "prod" | ""  # Group suffix (default: "central", empty to remove)
+            group_suffix      = "central" | "prod" | ""  # Group suffix (default: "", empty to remove)
             custom_group_name = "base-group-name"        # Base custom group name (type/suffix can still be added)
             
             # Type-specific configuration (optional)
@@ -77,7 +77,7 @@ variable "projects" {
             custom_name          = "base-custom-name"  # Base custom name (type added, always ends with "-proxy")
             
             # Group configuration (optional)
-            group_suffix      = "central" | "prod" | ""  # Group suffix (default: "central", empty to remove)
+            group_suffix      = "central" | "prod" | ""  # Group suffix (default: "", empty to remove)
             custom_group_name = "base-group-name"        # Base custom group name (type/suffix can still be added)
             
             # Proxy-specific configuration (optional)
