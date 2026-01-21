@@ -1,14 +1,8 @@
-locals {
-  repo_namespace = var.repo_env == null || var.repo_env == "" ? "repo-eclipse-org" : "repo-eclipse-org-${var.repo_env}"
-}
-
 terraform {
 
   backend "kubernetes" {
     secret_suffix = "state"
     config_path   = "~/.kube/config"
-    # namespace     = local.repo_namespace
-    namespace = "repo-eclipse-org"
   }
 
   required_providers {
