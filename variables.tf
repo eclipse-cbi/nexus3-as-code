@@ -124,6 +124,9 @@ variable "projects" {
         
         # Automatic group creation control (optional)
         create_group_auto = true | false  # If true, automatic repository groups will be created (default: false)
+        
+        # Force token update in Vault (optional)
+        force_token_update = true | false  # If true, forces regeneration of tokens in Vault (default: false). Set to true, apply, then set back to false.
       }
     ]
     

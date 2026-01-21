@@ -3,18 +3,8 @@
 data "external" "check_vault_secret" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
-  program = ["bash", "-c", <<EOF
-    SECRET_PATH="${each.key}/repo3.eclipse.org"
-    if vault kv get -mount=cbi -field=password "$SECRET_PATH" >/dev/null 2>&1; then
-      PASSWORD=$(vault kv get -mount=cbi -field=password "$SECRET_PATH" 2>/dev/null)
-      echo "{\"exists\":\"true\",\"password\":\"$PASSWORD\"}"
-    else
-      echo "{\"exists\":\"false\",\"password\":\"\"}"
-    fi
-EOF
-  ]
+  program = ["bash", "${path.module}/check_vault_secret.sh", "${each.key}/repo3.eclipse.org"]
 }
-
 resource "random_password" "bot_gen_password" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
@@ -71,6 +61,12 @@ resource "nexus_security_user" "bot_user" {
   roles      = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])
   status     = "active"
   depends_on = [nexus_security_role.role_bot_token]
+  lifecycle {
+    # Only ignore changes to the credentials, but allow force_update metadata to trigger updates
+    ignore_changes = [
+      password,
+    ]
+  }
 }
 
 data "external" "bot_user_token" {
@@ -93,7 +89,7 @@ data "external" "bot_user_token" {
     username = try(nexus_security_user.bot_user[each.key].userid, "")
     password = try(nexus_security_user.bot_user[each.key].password, "")
   }
-  
+
   depends_on = [nexus_security_user.bot_user]
 }
 
@@ -113,4 +109,17 @@ resource "vault_kv_secret_v2" "bot_token_creds" {
     token-username = data.external.bot_user_token[each.key].result["nameCode"]
     token-password = data.external.bot_user_token[each.key].result["passCode"]
   })
+
+  custom_metadata {
+    data = {
+      force_update = tostring(try(each.value.force_token_update, false))
+    }
+  }
+
+  lifecycle {
+    # Only ignore changes to the credentials, but allow force_update metadata to trigger updates
+    ignore_changes = [
+      data_json,
+    ]
+  }
 }
