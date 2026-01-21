@@ -78,14 +78,14 @@ function get_user_token_url(){
   local repo_url="$1"
   local urls=("/service/rest/internal/current-user/user-token" "/service/rest/usertoken/current" "/service/siesta/usertoken/current" "/service/local/usertoken/current")
   local furl=''
-   for url in "${urls[@]}"; do
-     furl="$repo_url$url";
-     resp_code="$(curl -sI "$furl" | awk '/^HTTP/{print $2}')"
-     if [[ "$resp_code" != '404' ]]; then
-       break;
-     fi
-   done
-   echo "$furl"
+    for url in "${urls[@]}"; do
+      furl="$repo_url$url";
+      resp_code="$(curl -sI "$furl" | awk '/^HTTP/{print $2}')"
+      if [[ "$resp_code" != '404' ]]; then
+        break;
+      fi
+    done
+    echo "$furl"
 }
 
 # fetch a single use time-limited access token
