@@ -91,8 +91,8 @@ All data are stored in file `terraform.${NEXUS_ENV}.tfvars.json`.
 | --- | --- | --- |
 | `repo_address` | Nexus3 instance to target | `"https://repo3.eclipse.org"` |
 | `repo_insecure` | Nexus3 mode insecure | `true` |
-| `repo_env` | Env to target for deployment, my be `${NEXUS_ENV}`, except for `production` which should be empty. | `staging` |
-| `secretsmanager_address` | Secrets manager adress. | `https://secretsmanager-staging.eclipse.org` |
+| `secretsmanager_address` | Secrets manager address. | `https://secretsmanager-staging.eclipse.org` |
+| `secretsmanager_path` | Secrets manager path. | `repo.eclipse.org` |
 
 ### Configure Projects
 

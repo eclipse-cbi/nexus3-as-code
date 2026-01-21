@@ -46,8 +46,9 @@ module "roles" {
 }
 
 module "users" {
-  source       = "./users"
-  projects     = var.projects
-  repo_address = var.repo_address
-  depends_on   = [module.roles]
+  source               = "./users"
+  projects             = var.projects
+  repo_address         = var.repo_address
+  secretsmanager_path  = var.secretsmanager_path
+  depends_on           = [module.roles]
 }

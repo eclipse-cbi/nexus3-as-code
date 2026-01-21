@@ -3,7 +3,7 @@
 data "external" "check_vault_secret" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
-  program = ["bash", "${path.module}/check_vault_secret.sh", "${each.key}/repo3.eclipse.org"]
+  program = ["bash", "${path.module}/check_vault_secret.sh", "${each.key}/${var.secretsmanager_path}"]
 }
 resource "random_password" "bot_gen_password" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
@@ -100,7 +100,7 @@ resource "vault_kv_secret_v2" "bot_token_creds" {
   }
 
   mount = "cbi"
-  name  = "${each.key}/repo3.eclipse.org"
+  name  = "${each.key}/${var.secretsmanager_path}"
 
   data_json = jsonencode({
     username       = nexus_security_user.bot_user[each.key].userid

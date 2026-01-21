@@ -7,3 +7,9 @@ variable "repo_address" {
   description = "The Nexus Repository address"
   type        = string
 }
+
+variable "secretsmanager_path" {
+  description = "Path suffix for secrets in Vault"
+  type        = string
+  default     = "repo.eclipse.org"
+}

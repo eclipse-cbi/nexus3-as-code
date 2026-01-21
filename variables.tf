@@ -6,12 +6,14 @@ variable "repo_insecure" {
   type = bool
 }
 
-variable "repo_env" {
+variable "secretsmanager_address" {
   type = string
 }
 
-variable "secretsmanager_address" {
-  type = string
+variable "secretsmanager_path" {
+  type        = string
+  description = "Path suffix for secrets in Vault (e.g., 'repo3.eclipse.org')"
+  default     = "repo.eclipse.org"
 }
 
 variable "defaults" {
