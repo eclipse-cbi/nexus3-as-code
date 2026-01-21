@@ -70,7 +70,7 @@ check-vars:
 
 init:
 	@echo "🚀 Initializing Terraform..."
-	terraform init
+	terraform init -backend-config=./backend/backend.$(NEXUS_ENV).hcl
 
 select:
 	@echo "🔄 Selecting Terraform workspace..."
