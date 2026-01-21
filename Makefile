@@ -9,8 +9,8 @@ help:
 	@echo "Available command :"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
-check-vars:
-	echo "🔍 Checking prerequisites..."; \
+check:
+	@echo "🔍 Checking prerequisites..."; \
 	if command -v vault >/dev/null 2>&1; then \
 		if vault token lookup >/dev/null 2>&1; then \
 			echo "  ✅ Vault connection successful"; \
@@ -84,21 +84,21 @@ fmt:
 	@echo "🎨 Formatting files..."
 	terraform fmt -recursive
 
-plan: check-vars validate
+plan: check validate
 	@echo "📋 Planning deployment..."
 	terraform plan -var-file=$(TF_VAR_FILE)
 
-apply: check-vars validate
+apply: check validate
 	@echo "🚀 Applying Terraform configuration..."
 	terraform apply -var-file=$(TF_VAR_FILE)
 
-destroy: check-vars
+destroy: check
 	@echo "💥 Destroying configuration..."
 	@echo "⚠️  WARNING: This will destroy ALL configuration!"
 	@read -p "Type 'yes' to confirm: " confirm && [ "$$confirm" = "yes" ]
 	terraform destroy -var-file=$(TF_VAR_FILE)
 
-refresh: check-vars
+refresh: check
 	@echo "🔄 Refreshing Terraform configuration..."
 	terraform refresh -var-file=$(TF_VAR_FILE)
 
