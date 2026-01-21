@@ -9,7 +9,7 @@ output "maven_repositories_group" {
 
 resource "nexus_repository_maven_group" "maven_repositories_group" {
   for_each = {
-    for group in local.maven_repositories_group : "${group.project_id}-${group.type}" => group
+    for group in local.maven_repositories_group : group.final_name => group
   }
 
   name = each.value.final_name

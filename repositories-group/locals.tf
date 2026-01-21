@@ -3,8 +3,8 @@ locals {
   transformed_groups = {
     for project in var.projects :
     project.project_id => {
-      for group in try(project.groups, []) :
-      group.type => group
+      for idx, group in try(project.groups, []) :
+      "${group.type}-${idx}" => group
     }
   }
 
@@ -16,7 +16,7 @@ locals {
         base_name            = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
         include_type_in_name = try(repo.include_type_in_name, true)
         include_env_in_name  = try(repo.include_env_in_name, true)
-        custom_name          = try(repo.custom_name, null)
+        custom_name          = try(project.group_custom_name, try(repo.custom_name, null))
         group_suffix         = try(repo.group_suffix, "")
         custom_group_name    = try(repo.custom_group_name, null)
         env                  = try(repo.env, "")
