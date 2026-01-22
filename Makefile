@@ -1,7 +1,8 @@
 # Makefile for GitLab OVHcloud Infrastructure 
-.PHONY: help init plan apply destroy validate fmt clean status outputs
+.PHONY: help init plan apply destroy validate fmt clean status outputs compile-jsonnet
 
 # Variables
+JSONNET_FILE ?= env/terraform.$(NEXUS_ENV).tfvars.jsonnet
 TF_VAR_FILE ?= terraform.$(NEXUS_ENV).tfvars.json
 
 
@@ -10,63 +11,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 check:
-	@echo "🔍 Checking prerequisites..."; \
-	if command -v vault >/dev/null 2>&1; then \
-		if vault token lookup >/dev/null 2>&1; then \
-			echo "  ✅ Vault connection successful"; \
-		else \
-			echo "  ❌ Vault token is invalid or expired"; \
-			echo "     💡 Tip: Run 'vault login' or source .env.sh"; \
-			exit 1; \
-		fi; \
-	else \
-		echo "  ⚠️  Vault CLI not found (optional)"; \
-	fi; \
-	errors=0; \
-	env_vars="NEXUS_ENV NEXUS_USERNAME NEXUS_PASSWORD"; \
-	for var in $$env_vars; do \
-		eval value=\$$$$var; \
-		if [ -z "$$value" ]; then \
-			echo "  ❌ $$var environment variable is not set"; \
-			errors=$$((errors + 1)); \
-		else \
-			if [ "$$var" = "VAULT_ENV" ]; then \
-				echo "  ✅ $$var=$$value"; \
-			else \
-				echo "  ✅ $$var is set"; \
-			fi; \
-		fi; \
-	done; \
-	\
-	if [ ! -f $(TF_VAR_FILE) ]; then \
-		echo "  ❌ Configuration file $(TF_VAR_FILE) not found"; \
-		echo "     💡 Tip: Copy terraform.tfvars.example to $(TF_VAR_FILE) and configure it"; \
-		errors=$$((errors + 1)); \
-	else \
-		echo "  ✅ Configuration file $(TF_VAR_FILE) found"; \
-	fi; \
-	\
-	if ! command -v terraform >/dev/null 2>&1; then \
-		echo "  ❌ Terraform is not installed or not in PATH"; \
-		errors=$$((errors + 1)); \
-	else \
-		echo "  ✅ Terraform is installed $$(terraform version -json | jq .terraform_version)"; \
-	fi; \
-	\
-	if [ -n "$(NEXUS_ENV)" ] && [ -f ./backend/backend.$(NEXUS_ENV).hcl ]; then \
-		echo "  ✅ Backend configuration file found"; \
-	elif [ -n "$(NEXUS_ENV)" ]; then \
-		echo "  ❌ Backend configuration file ./backend/backend.$(NEXUS_ENV).hcl not found"; \
-		errors=$$((errors + 1)); \
-	fi; \
-	\
-	echo ""; \
-	if [ $$errors -gt 0 ]; then \
-		echo "❌ Prerequisites check failed with $$errors error(s)"; \
-		exit 1; \
-	else \
-		echo "✅ All prerequisites are satisfied"; \
-	fi
+	@./check.sh $(TF_VAR_FILE) $(JSONNET_FILE)
 
 init:
 	@echo "🚀 Initializing Terraform..."
@@ -76,7 +21,7 @@ select:
 	@echo "🔄 Selecting Terraform workspace..."
 	@terraform workspace select $(NEXUS_ENV) || terraform workspace new $(NEXUS_ENV)
 
-validate: init ## Validate Terraform configuration
+validate: init
 	@echo "✅ Validating configuration..."
 	terraform validate
 
@@ -84,21 +29,30 @@ fmt:
 	@echo "🎨 Formatting files..."
 	terraform fmt -recursive
 
-plan: check validate
+compile-jsonnet:
+	@if [ -f $(JSONNET_FILE) ]; then \
+		echo "📦 Compiling $(JSONNET_FILE) to $(TF_VAR_FILE)..."; \
+		jsonnet $(JSONNET_FILE) > $(TF_VAR_FILE); \
+		echo "✅ Compilation successful"; \
+	else \
+		echo "⚠️  Jsonnet file $(JSONNET_FILE) not found, using existing $(TF_VAR_FILE)"; \
+	fi
+
+plan: check compile-jsonnet validate
 	@echo "📋 Planning deployment..."
 	terraform plan -var-file=$(TF_VAR_FILE)
 
-apply: check validate
+apply: check compile-jsonnet validate
 	@echo "🚀 Applying Terraform configuration..."
 	terraform apply -var-file=$(TF_VAR_FILE)
 
-destroy: check
+destroy: check compile-jsonnet
 	@echo "💥 Destroying configuration..."
 	@echo "⚠️  WARNING: This will destroy ALL configuration!"
 	@read -p "Type 'yes' to confirm: " confirm && [ "$$confirm" = "yes" ]
 	terraform destroy -var-file=$(TF_VAR_FILE)
 
-refresh: check
+refresh: check compile-jsonnet
 	@echo "🔄 Refreshing Terraform configuration..."
 	terraform refresh -var-file=$(TF_VAR_FILE)
 
