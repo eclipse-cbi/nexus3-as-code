@@ -4,8 +4,8 @@ locals {
       for repo in try(project.repositories, []) :
       {
         project_id           = project.project_id
-        short_code           = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
-        base_name            = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        short_code           = element(reverse(split(".", project.project_id)), 0)
+        base_name            = coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))
         env                  = try(repo.env, "")
         type                 = repo.type
         include_type_in_name = try(repo.include_type_in_name, true)
@@ -18,8 +18,8 @@ locals {
             "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
             ) : (
             try(repo.include_type_in_name, true) ?
-            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
-            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
           )
         )
       }
@@ -31,8 +31,8 @@ locals {
       for proxy in try(project.proxies, []) :
       {
         project_id           = project.project_id
-        short_code           = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
-        base_name            = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        short_code           = element(reverse(split(".", project.project_id)), 0)
+        base_name            = coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))
         type                 = proxy.type
         include_type_in_name = try(proxy.include_type_in_name, true)
         custom_name          = try(proxy.custom_name, null)
@@ -43,8 +43,8 @@ locals {
             "${proxy.custom_name}${try(proxy.include_type_in_name, true) ? "-${proxy.type}" : ""}-proxy"
             ) : (
             try(proxy.include_type_in_name, true) ?
-            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${proxy.type}-proxy" :
-            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-proxy"
+            "${coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))}-${proxy.type}-proxy" :
+            "${coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))}-proxy"
           )
         )
       }

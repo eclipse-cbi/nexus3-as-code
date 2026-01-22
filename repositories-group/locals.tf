@@ -13,7 +13,7 @@ locals {
       for repo in try(project.repositories, []) : {
         project_id           = project.project_id
         type                 = repo.type
-        base_name            = coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        base_name            = coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))
         include_type_in_name = try(repo.include_type_in_name, true)
         include_env_in_name  = try(repo.include_env_in_name, true)
         custom_name          = try(project.group_custom_name, try(repo.custom_name, null))
@@ -25,8 +25,8 @@ locals {
             "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
             ) : (
             try(repo.include_type_in_name, true) ?
-            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
-            "${coalesce(try(repo.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
           )
         )]
         proxy_group = []
@@ -39,7 +39,7 @@ locals {
       for proxy in try(project.proxies, []) : {
         project_id           = project.project_id
         type                 = proxy.type
-        base_name            = coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")
+        base_name            = coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))
         include_type_in_name = try(proxy.include_type_in_name, true)
         custom_name          = try(proxy.custom_name, null)
         group_suffix         = try(proxy.group_suffix, "")
@@ -52,8 +52,8 @@ locals {
             ) : (
             # Without custom_name: standard name generation with "-proxy"
             try(proxy.include_type_in_name, true) ?
-            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-${proxy.type}-proxy" :
-            "${coalesce(try(proxy.name, null), length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : "")}-proxy"
+            "${coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))}-${proxy.type}-proxy" :
+            "${coalesce(try(proxy.name, null), element(reverse(split(".", project.project_id)), 0))}-proxy"
           )
         )]
       }
@@ -68,8 +68,8 @@ locals {
     {
       project_id           = k
       type                 = v[0].type
-      short_code           = length(split(".", k)) > 1 ? split(".", k)[1] : ""
-      base_name            = try(v[0].base_name, length(split(".", k)) > 1 ? split(".", k)[1] : "")
+      short_code           = element(reverse(split(".", k)), 0)
+      base_name            = try(v[0].base_name, element(reverse(split(".", k)), 0))
       include_type_in_name = try(v[0].include_type_in_name, true)
       group_suffix         = try(v[0].group_suffix, "")
       custom_group_name    = try(v[0].custom_group_name, null)
@@ -87,8 +87,8 @@ locals {
       for group in try(project.groups, []) : {
         project_id           = project.project_id
         type                 = group.type
-        short_code           = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id
-        base_name            = try(group.name, length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : project.project_id)
+        short_code           = element(reverse(split(".", project.project_id)), 0)
+        base_name            = try(group.name, element(reverse(split(".", project.project_id)), 0))
         include_type_in_name = try(group.include_type_in_name, false)
         group_suffix         = try(group.group_suffix, "")
         custom_group_name    = try(group.custom_group_name, null)

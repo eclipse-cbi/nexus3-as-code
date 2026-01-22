@@ -2,7 +2,7 @@ locals {
   calculated_projects = [
     for project in var.projects : {
       project_id = project.project_id
-      short_code = length(split(".", project.project_id)) > 1 ? split(".", project.project_id)[1] : ""
+      short_code = element(reverse(split(".", project.project_id)), 0)
       archived   = try(project.archived, false)
       repositories : try(project.repositories, [])
       proxies : try(project.proxies, [])
