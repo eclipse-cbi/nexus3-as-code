@@ -178,7 +178,7 @@
     { "id": "ee4j.jakartaee-tck", "template": "maven2StagingOnly" },
     { "id": "ee4j.jaxb", "template": "maven2StagingOnly" },
     { "id": "ee4j.jaxb-impl", "template": "maven2StagingOnly" },
-    { "id": "ee4j.jaxws", "template": "maven2StagingOnly" },
+    { "id": "ee4j.jaxws", "template": "maven2LegacyStandardWithStaging", "shortNameOverride": "test-jax-rs-api" },
     { "id": "ee4j.jca", "template": "maven2StagingOnly" },
     { "id": "ee4j.jersey", "template": "maven2StagingOnly" },
     { "id": "ee4j.jpa", "template": "maven2StagingOnly" },
@@ -252,7 +252,7 @@
     { "id": "research-datamite", "template": "maven2LegacyStandard" },
     { "id": "rt.ebr", "template": "maven2LegacyStandard", "archived": true },
     { "id": "rt.ecf", "template": "maven2LegacyStandard" },
-    { "id": "science.statet", "template": "maven2LegacyCustomGroupName", "customGroupPrefix": "state" },
+    { "id": "science.statet", "template": "maven2LegacyStandard" },
     {
       "id": "technology.cbi",
       "template": "custom",
