@@ -103,21 +103,19 @@ local projectTemplates = {
   } + (if archived then { archived: true } else {}),
 
   // APT Template: stable + dev/unstable
-  aptStandard(projectId, blobstoreName, archived=false):: {
+  aptStandard(projectId, blobstoreName=null, archived=false):: {
     project_id: projectId,
     blobstore_name: blobstoreName,
     repositories: [
       {
         type: 'apt',
         distribution: 'stable',
-        storage: { blob_store_name: blobstoreName },
-      },
+      } + (if blobstoreName != null then { storage: { blob_store_name: blobstoreName } } else {}),
       {
         env: 'dev',
         type: 'apt',
         distribution: 'unstable',
-        storage: { blob_store_name: blobstoreName },
-      },
+      } + (if blobstoreName != null then { storage: { blob_store_name: blobstoreName } } else {}),
     ],
   } + (if archived then { archived: true } else {}),
 
@@ -141,7 +139,7 @@ local projectTemplates = {
 };
 
 // Generate projects from data
-local projects = [
+local generatedProjects = [
   local p = data.projects[i];
   local template = p.template;
   local archived = if std.objectHas(p, 'archived') then p.archived else false;
@@ -170,6 +168,42 @@ local projects = [
     error 'Unknown template: ' + template
   for i in std.range(0, std.length(data.projects) - 1)
 ];
+
+// Helper function to merge arrays (for repositories, proxies, groups)
+local mergeArrays(arr1, arr2) = 
+  if arr1 == null && arr2 == null then null
+  else if arr1 == null then arr2
+  else if arr2 == null then arr1
+  else arr1 + arr2;
+
+// Group projects by project_id and merge them
+local projectsGroupedById = std.foldl(
+  function(acc, project)
+    local id = project.project_id;
+    local existing = if std.objectHas(acc, id) then acc[id] else null;
+    acc + {
+      [id]: if existing == null then project else
+        existing + project + {
+          repositories: mergeArrays(
+            if std.objectHas(existing, 'repositories') then existing.repositories else [],
+            if std.objectHas(project, 'repositories') then project.repositories else []
+          ),
+          proxies: mergeArrays(
+            if std.objectHas(existing, 'proxies') then existing.proxies else [],
+            if std.objectHas(project, 'proxies') then project.proxies else []
+          ),
+          groups: mergeArrays(
+            if std.objectHas(existing, 'groups') then existing.groups else [],
+            if std.objectHas(project, 'groups') then project.groups else []
+          ),
+        }
+    },
+  generatedProjects,
+  {}
+);
+
+// Convert grouped object back to array
+local projects = std.objectValues(projectsGroupedById);
 
 // Final configuration
 data.config + {
