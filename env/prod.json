@@ -34,7 +34,38 @@
     { "id": "automotive.tractusx", "template": "helmStandard" },
     { "id": "ecd.orion", "template": "maven2LegacyStandard", "archived": true },
     { "id": "eclipse", "template": "maven2LegacyStandardWithStaging" },
-    { "id": "eclipse.jdt.ls", "template": "maven2LegacyStandard", "shortNameOverride": "jdtls" },
+    {
+      "id": "eclipse.jdt.ls",
+      "template": "custom",
+      "config": {
+        "project_id": "eclipse.jdt.ls",
+        "repositories": [
+          { "type": "maven2", "name": "ls", "env": "releases" },
+          { "type": "maven2", "name": "ls", "env": "snapshots" }
+        ],
+        "create_group_auto": true,
+        "groups": [
+          {
+            "type": "maven2",
+            "custom_name": "jdtls-releases",
+            "include_type_in_name": false,
+            "members": ["ls-maven2-releases"]
+          },
+          {
+            "type": "maven2",
+            "custom_name": "jdtls-snapshots",
+            "include_type_in_name": false,
+            "members": ["ls-maven2-snapshots"]
+          },
+          {
+            "type": "maven2",
+            "custom_name": "jdt.ls",
+            "include_type_in_name": false,
+            "members": ["ls-maven2-releases", "ls-maven2-snapshots"]
+          }
+        ]
+      }
+    },
     {
       "id": "ee4j",
       "template": "custom",
