@@ -1,6 +1,6 @@
 # Nexus blob stores per project
 resource "nexus_blobstore_file" "project_blobstore" {
-  for_each = local.project_blobstores
+  for_each = local.blobstores_to_create
 
   name = each.value.name
   path = "/blobs-${each.value.short_code}"

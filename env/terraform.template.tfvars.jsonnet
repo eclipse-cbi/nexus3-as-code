@@ -77,6 +77,15 @@ local projectTemplates = {
       ],
     },
 
+  // Maven2 Standard with staging
+  maven2StandardWithStaging(projectId, archived=false, shortNameOverride=null):: 
+    local base = self.maven2Standard(projectId, archived, shortNameOverride);
+    base + {
+      repositories: base.repositories + [
+        utils.repo('maven2', 'staging'),
+      ],
+    },
+
   // Maven2 Legacy with custom group names
   maven2LegacyCustomGroupName(projectId, customGroupPrefix, archived=false):: 
     local shortName = utils.shortName(projectId);
@@ -106,6 +115,7 @@ local projectTemplates = {
   aptStandard(projectId, blobstoreName=null, archived=false):: {
     project_id: projectId,
     blobstore_name: blobstoreName,
+    external_blobstore: blobstoreName != null,
     repositories: [
       {
         type: 'apt',
@@ -146,6 +156,8 @@ local generatedProjects = [
   
   if template == 'maven2Standard' then
     projectTemplates.maven2Standard(p.id, archived)
+  else if template == 'maven2StandardWithStaging' then
+    projectTemplates.maven2StandardWithStaging(p.id, archived)
   else if template == 'maven2LegacyStandard' then
     projectTemplates.maven2LegacyStandard(
       p.id, 
