@@ -4,7 +4,7 @@
 # Variables
 JSONNET_FILE ?= env/terraform.$(NEXUS_ENV).tfvars.jsonnet
 TF_VAR_FILE ?= terraform.$(NEXUS_ENV).tfvars.json
-
+TF_PARALLELISM ?= 30
 
 help:
 	@echo "Available command :"
@@ -40,21 +40,21 @@ compile-jsonnet:
 
 plan: check compile-jsonnet validate
 	@echo "📋 Planning deployment..."
-	terraform plan -var-file=$(TF_VAR_FILE)
+	terraform plan -var-file=$(TF_VAR_FILE) -parallelism=$(TF_PARALLELISM)
 
 apply: check compile-jsonnet validate
 	@echo "🚀 Applying Terraform configuration..."
-	terraform apply -var-file=$(TF_VAR_FILE)
+	terraform apply -var-file=$(TF_VAR_FILE)  -parallelism=$(TF_PARALLELISM)
 
 destroy: check compile-jsonnet
 	@echo "💥 Destroying configuration..."
 	@echo "⚠️  WARNING: This will destroy ALL configuration!"
 	@read -p "Type 'yes' to confirm: " confirm && [ "$$confirm" = "yes" ]
-	terraform destroy -var-file=$(TF_VAR_FILE)
+	terraform destroy -var-file=$(TF_VAR_FILE)  -parallelism=$(TF_PARALLELISM)
 
 refresh: check compile-jsonnet
 	@echo "🔄 Refreshing Terraform configuration..."
-	terraform refresh -var-file=$(TF_VAR_FILE)
+	terraform refresh -var-file=$(TF_VAR_FILE)  -parallelism=$(TF_PARALLELISM)
 
 outputs:
 	@echo "📊 Infrastructure outputs:"
