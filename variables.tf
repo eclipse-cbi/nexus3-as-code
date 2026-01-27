@@ -19,6 +19,20 @@ variable "secretsmanager_path" {
 variable "defaults" {
 }
 
+variable "global_groups" {
+  description = "Global repository groups that automatically collect repositories by type and environment"
+  type = list(object({
+    type                 = string
+    custom_name          = optional(string)
+    include_type_in_name = optional(bool, false)
+    auto_collect = optional(object({
+      env  = string
+      type = string
+    }))
+  }))
+  default = []
+}
+
 variable "projects" {
   description = <<-EOT
     List of projects with their repositories and proxies configuration.

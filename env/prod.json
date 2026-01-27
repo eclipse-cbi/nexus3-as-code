@@ -26,7 +26,27 @@
     //       }
     //     }
     //   }
-    }
+    },
+    "global_groups": [
+      {
+        "type": "maven2",
+        "custom_name": "maven2-releases",
+        "include_type_in_name": false,
+        "auto_collect": {
+          "env": "releases",
+          "type": "maven2"
+        }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven2-snapshots",
+        "include_type_in_name": false,
+        "auto_collect": {
+          "env": "snapshots",
+          "type": "maven2"
+        }
+      }
+    ]
   },
   "projects": [
     { "id": "automotive.mosaic", "template": "maven2Standard" },

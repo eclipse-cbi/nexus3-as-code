@@ -101,8 +101,50 @@ locals {
     ]
   ])
 
-  # Merge standard and custom groups
-  all_repositories_groups = concat(local.transformed_repositories_groups, local.custom_groups)
+  # Collect all repositories by type and env for global groups
+  all_repositories_by_type_env = flatten([
+    for project in var.projects : [
+      for repo in try(project.repositories, []) : {
+        name = (
+          try(repo.custom_name, null) != null ? (
+            "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+            ) : (
+            try(repo.include_type_in_name, true) ?
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+            "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+          )
+        )
+        type = repo.type
+        env  = try(repo.env, "internal")
+      }
+    ]
+  ])
+
+  # Create global groups with auto_collect
+  global_groups = flatten([
+    for group in var.global_groups : {
+      project_id           = "global"  # Virtual project for global groups
+      type                 = group.type
+      short_code           = "global"
+      base_name            = try(group.custom_name, "global")
+      include_type_in_name = try(group.include_type_in_name, false)
+      group_suffix         = ""
+      custom_group_name    = null
+      custom_name          = try(group.custom_name, null)
+      group                = []
+      proxy_group          = []
+      online               = true
+      # Auto-collect matching repositories if auto_collect is defined
+      custom_members = try(group.auto_collect, null) != null ? [
+        for repo in local.all_repositories_by_type_env :
+        repo.name
+        if repo.type == group.auto_collect.type && repo.env == group.auto_collect.env
+      ] : []
+    }
+  ])
+
+  # Merge standard, custom, and global groups
+  all_repositories_groups = concat(local.transformed_repositories_groups, local.custom_groups, local.global_groups)
 
   docker_repositories_group = [
     for groups in local.all_repositories_groups :
