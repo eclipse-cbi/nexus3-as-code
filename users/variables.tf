@@ -13,3 +13,9 @@ variable "secretsmanager_path" {
   type        = string
   default     = "repo.eclipse.org"
 }
+
+variable "project_roles" {
+  description = "Map of project roles created by the roles module (for implicit dependency)"
+  type        = any
+  default     = {}
+}

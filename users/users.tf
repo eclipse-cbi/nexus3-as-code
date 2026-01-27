@@ -4,6 +4,14 @@ data "external" "check_vault_secret" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
 
   program = ["bash", "${path.module}/check_vault_secret.sh", "${each.key}/${var.secretsmanager_path}"]
+  
+  lifecycle {
+    # Prevent unnecessary re-reads when unrelated resources change
+    postcondition {
+      condition     = self.result != null
+      error_message = "Failed to check vault secret for ${each.key}"
+    }
+  }
 }
 resource "random_password" "bot_gen_password" {
   for_each = { for project in var.projects : project.project_id => project if !try(project.archived, false) }
@@ -58,7 +66,13 @@ resource "nexus_security_user" "bot_user" {
   lastname   = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : each.key
   email      = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
   password   = local.bot_passwords[each.key]
-  roles      = flatten([each.value.roles_repository, each.value.roles_proxy, "nx-anonymous", "bot-token-role"])
+  # Use role IDs to create implicit dependency on roles module
+  roles      = flatten([
+    each.value.roles_repository,
+    each.value.roles_proxy,
+    "nx-anonymous",
+    try(var.project_roles["bot-token"].id, "bot-token-role")
+  ])
   status     = "active"
   depends_on = [nexus_security_role.role_bot_token]
   lifecycle {

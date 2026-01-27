@@ -28,6 +28,7 @@ module "proxies" {
 module "repositories-group" {
   source             = "./repositories-group"
   defaults           = var.defaults
+  global_groups      = var.global_groups
   projects           = var.projects
   project_blobstores = module.blobstores.project_blobstores
   depends_on         = [module.repositories, module.proxies, module.blobstores]
@@ -50,5 +51,6 @@ module "users" {
   projects             = var.projects
   repo_address         = var.repo_address
   secretsmanager_path  = var.secretsmanager_path
-  depends_on           = [module.roles]
+  project_roles        = module.roles.all_roles
+  # Implicit dependency through project_roles reference (no explicit depends_on needed)
 }
