@@ -33,6 +33,63 @@ variable "global_groups" {
   default = []
 }
 
+variable "global_proxies" {
+  description = "Global proxy repositories (e.g., maven-central, npm, pypi, docker-hub)"
+  type = list(object({
+    type                 = string
+    custom_name          = optional(string)
+    include_type_in_name = optional(bool, true)
+    remote_url           = string
+    storage = optional(object({
+      blob_store_name                = optional(string)
+      strict_content_type_validation = optional(bool)
+    }))
+    cleanup = optional(object({
+      policy_names = optional(list(string))
+    }))
+    negative_cache = optional(object({
+      enabled = optional(bool)
+      ttl     = optional(number)
+    }))
+    http_client = optional(object({
+      blocked    = optional(bool)
+      auto_block = optional(bool)
+      authentication = optional(object({
+        type        = optional(string)
+        username    = optional(string)
+        password    = optional(string)
+        ntlm_domain = optional(string)
+        ntlm_host   = optional(string)
+      }))
+    }))
+    proxy = optional(object({
+      content_max_age  = optional(number)
+      metadata_max_age = optional(number)
+    }))
+    maven = optional(object({
+      version_policy      = optional(string)
+      layout_policy       = optional(string)
+      content_disposition = optional(string)
+    }))
+    docker = optional(object({
+      force_basic_auth = optional(bool)
+      v1_enabled       = optional(bool)
+      http_port        = optional(number)
+      https_port       = optional(number)
+      subdomain        = optional(string)
+    }))
+    docker_proxy = optional(object({
+      index_type = optional(string)
+      index_url  = optional(string)
+    }))
+    npm = optional(object({
+      remove_non_cataloged = optional(bool)
+      remove_quarantined   = optional(bool)
+    }))
+  }))
+  default = []
+}
+
 variable "projects" {
   description = <<-EOT
     List of projects with their repositories and proxies configuration.

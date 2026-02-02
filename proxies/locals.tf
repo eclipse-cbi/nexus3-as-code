@@ -1,4 +1,67 @@
 locals {
+  # Transform global proxies
+  transform_global_proxies = flatten([
+    for proxy in var.global_proxies : [
+      merge(
+        var.default_proxies_config,
+        try(var.defaults.proxies[proxy.type].online, {}),
+        proxy,
+        {
+          # Name customization attributes
+          include_type_in_name = try(proxy.include_type_in_name, true)
+          custom_name          = try(proxy.custom_name, null)
+
+          # Final proxy name construction (always includes "-proxy" suffix)
+          name = (
+            try(proxy.custom_name, null) != null ? (
+              # With custom_name: add type if requested, always add "-proxy"
+              "${proxy.custom_name}${try(proxy.include_type_in_name, true) ? "-${proxy.type}" : ""}-proxy"
+              ) : (
+              # Without custom_name: standard name generation with "-proxy"
+              try(proxy.include_type_in_name, true) ?
+              "global-${proxy.type}-proxy" :
+              "global-proxy"
+            )
+          )
+
+          type = proxy.type
+
+          storage = merge(
+            var.default_storage_config,
+            try(var.defaults.proxies[proxy.type].storage, {}),
+            try(proxy.storage, {})
+          )
+
+          cleanup = merge(
+            var.default_cleanup_config,
+            try(var.defaults.proxies[proxy.type].cleanup, {}),
+            try(proxy.cleanup, {})
+          )
+
+          negative_cache = merge(
+            var.default_negative_cache_config,
+            try(var.defaults.proxies[proxy.type].negative_cache, {}),
+            try(proxy.negative_cache, {})
+          )
+
+          http_client = merge(
+            var.default_http_client_config,
+            try(var.defaults.proxies[proxy.type].http_client, {}),
+            try(proxy.http_client, {})
+          )
+
+          proxy = merge(
+            var.default_proxy_config,
+            try(proxy.proxy, {}),
+            {
+              remote_url = proxy.remote_url
+            }
+          )
+        }
+      )
+    ]
+  ])
+
   transform_proxies = flatten([
     for project in var.projects : [
       for repo in try(project.proxies, []) : [
@@ -69,68 +132,130 @@ locals {
     ]
   ])
 
-  docker_proxies = [
-    for repo in local.transform_proxies : merge(repo, {
-      docker = merge(
-        var.default_docker_config,
-        try(repo.docker, {})
-      )
-      docker_proxy = merge(
-        var.default_docker_proxy_config,
-        try(repo.docker_proxy, {})
-      )
-      proxy = merge(
-        var.default_proxy_config,
-        try(repo.proxy, {})
-      )
-      proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://registry-1.docker.io" }))
+  docker_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(repo, {
+        docker = merge(
+          var.default_docker_config,
+          try(repo.docker, {})
+        )
+        docker_proxy = merge(
+          var.default_docker_proxy_config,
+          try(repo.docker_proxy, {})
+        )
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo.type == "docker"
+    ],
+    [
+      for repo in local.transform_proxies : merge(repo, {
+        docker = merge(
+          var.default_docker_config,
+          try(repo.docker, {})
+        )
+        docker_proxy = merge(
+          var.default_docker_proxy_config,
+          try(repo.docker_proxy, {})
+        )
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+        proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://registry-1.docker.io" }))
 
-    }) if repo.type == "docker"
-  ]
+      }) if repo.type == "docker"
+    ]
+  )
 
-  maven_proxies = [
-    for repo in local.transform_proxies : merge(repo, {
-      maven = merge(
-        var.default_maven_config,
-        try(repo.maven2, {})
-      )
-      proxy = merge(
-        var.default_proxy_config,
-        try(repo.proxy, {})
-      )
-      proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://repo1.maven.org/maven2/" }))
-    }) if repo != null && repo.type == "maven2"
-  ]
+  maven_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(repo, {
+        maven = merge(
+          var.default_maven_config,
+          try(repo.maven, {})
+        )
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "maven2"
+    ],
+    [
+      for repo in local.transform_proxies : merge(repo, {
+        maven = merge(
+          var.default_maven_config,
+          try(repo.maven2, {})
+        )
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+        proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://repo1.maven.org/maven2/" }))
+      }) if repo != null && repo.type == "maven2"
+    ]
+  )
 
-  npm_proxies = [
-    for repo in local.transform_proxies : merge(var.default_npm_proxies_config, repo, {
-      proxy = merge(
-        var.default_proxy_config,
-        try(repo.proxy, {})
-      )
-      proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://npmjs.org/" }))
-    }) if repo != null && repo.type == "npm"
-  ]
+  npm_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(var.default_npm_proxies_config, repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "npm"
+    ],
+    [
+      for repo in local.transform_proxies : merge(var.default_npm_proxies_config, repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+        proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://npmjs.org/" }))
+      }) if repo != null && repo.type == "npm"
+    ]
+  )
 
-  helm_proxies = [
-    for repo in local.transform_proxies : merge(repo, {
-      proxy = merge(
-        var.default_proxy_config,
-        try(repo.proxy, {})
-      )
-      proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://kubernetes-charts.storage.googleapis.com/" }))
-    }) if repo != null && repo.type == "helm"
-  ]
+  helm_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "helm"
+    ],
+    [
+      for repo in local.transform_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+        proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://kubernetes-charts.storage.googleapis.com/" }))
+      }) if repo != null && repo.type == "helm"
+    ]
+  )
 
-  pypi_proxies = [
-    for repo in local.transform_proxies : merge(repo, {
-      proxy = merge(
-        var.default_proxy_config,
-        try(repo.proxy, {})
-      )
-      proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://pypi.org" }))
-    }) if repo != null && repo.type == "pypi"
-  ]
+  pypi_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "pypi"
+    ],
+    [
+      for repo in local.transform_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+        proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "https://pypi.org" }))
+      }) if repo != null && repo.type == "pypi"
+    ]
+  )
 
   apt_proxies = [
     for repo in local.transform_proxies : merge(repo, {

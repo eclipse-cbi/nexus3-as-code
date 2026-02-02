@@ -4,6 +4,12 @@ variable "defaults" {
 variable "projects" {
 }
 
+variable "global_proxies" {
+  description = "List of global proxy repositories"
+  type        = list(any)
+  default     = []
+}
+
 variable "project_blobstores" {
   description = "Map of project_id to blobstore name"
   type        = map(string)

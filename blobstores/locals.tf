@@ -11,9 +11,23 @@ locals {
     }
   }
 
-  # Blobstores to create (only for projects without explicit blobstore_name)
-  blobstores_to_create = {
-    for k, v in local.project_blobstores : k => v
-    if v.external_blobstore == false
+  # Global proxy blobstores
+  global_proxy_blobstores = {
+    for proxy in var.global_proxies : 
+      try(proxy.storage.blob_store_name, "default") => {
+        name             = try(proxy.storage.blob_store_name, "default")
+        soft_quota_limit = try(proxy.storage.soft_quota_limit, var.default_soft_quota_limit)
+        soft_quota_type  = try(proxy.storage.soft_quota_type, var.default_soft_quota_type)
+      }
+    if try(proxy.storage.blob_store_name, "default") != "default"
   }
+
+  # Blobstores to create (only for projects without explicit blobstore_name)
+  blobstores_to_create = merge(
+    {
+      for k, v in local.project_blobstores : k => v
+      if v.external_blobstore == false
+    },
+    local.global_proxy_blobstores
+  )
 }

@@ -46,6 +46,65 @@
           "type": "maven2"
         }
       }
+    ],
+    "global_proxies": [
+      {
+        "type": "maven2",
+        "custom_name": "maven-central",
+        "include_type_in_name": false,
+        "remote_url": "https://repo1.maven.org/maven2/",
+        "maven": {
+          "version_policy": "RELEASE",
+          "layout_policy": "STRICT"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-maven2",
+          "strict_content_type_validation": true
+        }
+      },
+      {
+        "type": "npm",
+        "custom_name": "npm",
+        "include_type_in_name": false,
+        "remote_url": "https://registry.npmjs.org",
+        "storage": {
+          "blob_store_name": "blobs-proxy-npm"
+        }
+      },
+      {
+        "type": "pypi",
+        "custom_name": "pypi",
+        "include_type_in_name": false,
+        "remote_url": "https://pypi.org",
+        "storage": {
+          "blob_store_name": "blobs-proxy-pypi"
+        }
+      },
+      {
+        "type": "docker",
+        "custom_name": "docker",
+        "include_type_in_name": false,
+        "remote_url": "https://registry-1.docker.io",
+        "docker": {
+          "force_basic_auth": true,
+          "v1_enabled": false
+        },
+        "docker_proxy": {
+          "index_type": "HUB"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-docker"
+        }
+      },
+      {
+        "type": "helm",
+        "custom_name": "helm",
+        "include_type_in_name": false,
+        "remote_url": "https://charts.helm.sh/stable",
+        "storage": {
+          "blob_store_name": "blobs-proxy-helm"
+        }
+      }
     ]
   },
   "projects": [

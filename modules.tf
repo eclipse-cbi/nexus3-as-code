@@ -5,8 +5,9 @@ module "types" {
 }
 
 module "blobstores" {
-  source   = "./blobstores"
-  projects = var.projects
+  source         = "./blobstores"
+  projects       = var.projects
+  global_proxies = var.global_proxies
 }
 
 module "repositories" {
@@ -21,6 +22,7 @@ module "proxies" {
   source             = "./proxies"
   defaults           = var.defaults
   projects           = var.projects
+  global_proxies     = var.global_proxies
   project_blobstores = module.blobstores.project_blobstores
   depends_on         = [module.blobstores]
 }
