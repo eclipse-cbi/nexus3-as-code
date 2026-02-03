@@ -10,17 +10,18 @@ locals {
           # Name customization attributes
           include_type_in_name = try(proxy.include_type_in_name, true)
           custom_name          = try(proxy.custom_name, null)
+          proxy_suffix         = try(proxy.proxy_suffix, var.default_proxy_suffix)
 
-          # Final proxy name construction (always includes "-proxy" suffix)
+          # Final proxy name construction (uses proxy_suffix)
           name = (
             try(proxy.custom_name, null) != null ? (
-              # With custom_name: add type if requested, always add "-proxy"
-              "${proxy.custom_name}${try(proxy.include_type_in_name, true) ? "-${proxy.type}" : ""}-proxy"
+              # With custom_name: add type if requested, always add proxy_suffix
+              "${proxy.custom_name}${try(proxy.include_type_in_name, true) ? "-${proxy.type}" : ""}${try(proxy.proxy_suffix, var.default_proxy_suffix)}"
               ) : (
-              # Without custom_name: standard name generation with "-proxy"
+              # Without custom_name: standard name generation with proxy_suffix
               try(proxy.include_type_in_name, true) ?
-              "global-${proxy.type}-proxy" :
-              "global-proxy"
+              "global-${proxy.type}${try(proxy.proxy_suffix, var.default_proxy_suffix)}" :
+              "global${try(proxy.proxy_suffix, var.default_proxy_suffix)}"
             )
           )
 
@@ -76,18 +77,19 @@ locals {
 
             # Name customization attributes
             include_type_in_name = try(repo.include_type_in_name, true) # Default: include type in name
-            custom_name          = try(repo.custom_name, null)          # Base custom name (type and "proxy" can still be added)
+            custom_name          = try(repo.custom_name, null)          # Base custom name (type and proxy_suffix can still be added)
+            proxy_suffix         = try(repo.proxy_suffix, var.default_proxy_suffix)
 
-            # Final proxy name construction (always includes "-proxy" suffix)
+            # Final proxy name construction (uses proxy_suffix)
             name = (
               try(repo.custom_name, null) != null ? (
-                # With custom_name: add type if requested, always add "-proxy"
-                "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}-proxy"
+                # With custom_name: add type if requested, always add proxy_suffix
+                "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.proxy_suffix, var.default_proxy_suffix)}"
                 ) : (
-                # Without custom_name: standard name generation with "-proxy"
+                # Without custom_name: standard name generation with proxy_suffix
                 try(repo.include_type_in_name, true) ?
-                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}-proxy" :
-                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-proxy"
+                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.proxy_suffix, var.default_proxy_suffix)}" :
+                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.proxy_suffix, var.default_proxy_suffix)}"
               )
             )
 

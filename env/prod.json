@@ -155,7 +155,6 @@
             "type": "maven2",
             "custom_name": "ee4j-staging",
             "include_type_in_name": false,
-            "group_suffix": "",
             "members": [
               "agentic-ai-maven2-staging",
               "angus-maven2-staging",

@@ -16,6 +16,12 @@ variable "project_blobstores" {
   default     = {}
 }
 
+variable "default_proxy_suffix" {
+  description = "Default suffix for proxy names"
+  type        = string
+  default     = "-proxy"
+}
+
 variable "default_proxies_config" {
   description = "Default configuration for proxies"
   type = object({
