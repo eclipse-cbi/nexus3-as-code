@@ -11,15 +11,21 @@ locals {
     }
   }
 
-  # Global proxy blobstores
-  global_proxy_blobstores = {
+  # Global proxy blobstores (deduplicated by blob_store_name)
+  global_proxy_blobstores_grouped = {
     for proxy in var.global_proxies : 
       try(proxy.storage.blob_store_name, "default") => {
         name             = try(proxy.storage.blob_store_name, "default")
         soft_quota_limit = try(proxy.storage.soft_quota_limit, var.default_soft_quota_limit)
         soft_quota_type  = try(proxy.storage.soft_quota_type, var.default_soft_quota_type)
-      }
+      }...
     if try(proxy.storage.blob_store_name, "default") != "default"
+  }
+
+  # Flatten to get unique blobstores
+  global_proxy_blobstores = {
+    for name, items in local.global_proxy_blobstores_grouped :
+      name => items[0]
   }
 
   # Blobstores to create (only for projects without explicit blobstore_name)

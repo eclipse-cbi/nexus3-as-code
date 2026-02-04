@@ -45,16 +45,36 @@
           "env": "snapshots",
           "type": "maven2"
         }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven-central",
+        "include_type_in_name": false,
+        "members": ["maven-central-releases-proxy", "maven-central-snapshots-proxy"]
       }
     ],
     "global_proxies": [
       {
         "type": "maven2",
-        "custom_name": "maven-central",
+        "custom_name": "maven-central-releases",
         "include_type_in_name": false,
         "remote_url": "https://repo1.maven.org/maven2/",
         "maven": {
           "version_policy": "RELEASE",
+          "layout_policy": "STRICT"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-maven2",
+          "strict_content_type_validation": true
+        }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven-central-snapshots",
+        "include_type_in_name": false,
+        "remote_url": "https://central.sonatype.com/repository/maven-snapshots/",
+        "maven": {
+          "version_policy": "SNAPSHOT",
           "layout_policy": "STRICT"
         },
         "storage": {

@@ -134,12 +134,14 @@ locals {
       group                = []
       proxy_group          = []
       online               = true
-      # Auto-collect matching repositories if auto_collect is defined
-      custom_members = try(group.auto_collect, null) != null ? [
-        for repo in local.all_repositories_by_type_env :
-        repo.name
-        if repo.type == group.auto_collect.type && repo.env == group.auto_collect.env
-      ] : []
+      # Custom members or auto-collect matching repositories
+      custom_members = try(group.members, null) != null ? group.members : (
+        try(group.auto_collect, null) != null ? [
+          for repo in local.all_repositories_by_type_env :
+          repo.name
+          if repo.type == group.auto_collect.type && repo.env == group.auto_collect.env
+        ] : []
+      )
     }
   ])
 
