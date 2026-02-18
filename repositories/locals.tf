@@ -78,7 +78,7 @@ locals {
       maven = merge(
         var.default_maven_config,
         try(var.defaults.repositories.maven2.maven, {}),
-        try(repo.maven2, {})
+        try(repo.maven, {})
       )
     }) if repo != null && repo.type == "maven2"
   ]
