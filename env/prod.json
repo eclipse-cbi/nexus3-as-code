@@ -321,7 +321,28 @@
     { "id": "iot.hawkbit", "template": "maven2Standard" },
     { "id": "iot.hono", "template": "maven2Standard" },
     { "id": "iot.kura", "template": "aptStandard", "blobstoreName": "blobs-kura" },
-    { "id": "iot.kura", "template": "maven2Permissive" },
+    {
+      "id": "iot.kura",
+      "template": "custom",
+      "config": {
+        "project_id": "iot.kura",
+        "repositories": [
+          {
+            "type": "maven2",
+            "env": "releases",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "PERMISSIVE" },
+            "storage": { "strict_content_type_validation": false }
+          },
+          {
+            "type": "maven2",
+            "env": "snapshots",
+            "maven": { "version_policy": "SNAPSHOT", "layout_policy": "PERMISSIVE" },
+            "storage": { "strict_content_type_validation": false }
+          }
+        ],
+        "create_group_auto": true
+      }
+    },
     { "id": "iot.leshan", "template": "maven2Standard" },
     { "id": "iot.paho", "template": "maven2Standard" },
     { "id": "iot.smarthome", "template": "maven2Standard", "archived": true },
@@ -419,7 +440,28 @@
     { "id": "technology.efxclipse", "template": "maven2Standard" },
     { "id": "technology.egit", "template": "maven2Standard" },
     { "id": "technology.golo", "template": "maven2Standard", "archived": true },
-    { "id": "technology.jgit", "template": "maven2Permissive" },
+    {
+      "id": "technology.jgit",
+      "template": "custom",
+      "config": {
+        "project_id": "technology.jgit",
+        "repositories": [
+          {
+            "type": "maven2",
+            "env": "releases",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "PERMISSIVE" },
+            "storage": { "strict_content_type_validation": false }
+          },
+          {
+            "type": "maven2",
+            "env": "snapshots",
+            "maven": { "version_policy": "SNAPSHOT", "layout_policy": "PERMISSIVE" },
+            "storage": { "strict_content_type_validation": false }
+          }
+        ],
+        "create_group_auto": true
+      }
+    },
     { "id": "technology.jnosql", "template": "maven2StagingOnly" },
     { "id": "technology.jubula", "template": "maven2Standard", "archived": true },
     { "id": "technology.lemminx", "template": "maven2Standard" },
