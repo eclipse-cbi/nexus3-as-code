@@ -321,12 +321,36 @@
     { "id": "iot.hawkbit", "template": "maven2Standard" },
     { "id": "iot.hono", "template": "maven2Standard" },
     { "id": "iot.kura", "template": "aptStandard", "blobstoreName": "blobs-kura" },
-    { "id": "iot.kura", "template": "maven2Standard" },
+    { "id": "iot.kura", "template": "maven2Permissive" },
     { "id": "iot.leshan", "template": "maven2Standard" },
     { "id": "iot.paho", "template": "maven2Standard" },
     { "id": "iot.smarthome", "template": "maven2Standard", "archived": true },
     { "id": "iot.unide", "template": "maven2Standard", "archived": true },
-    { "id": "locationtech", "template": "maven2Standard" },
+    {
+      "id": "locationtech",
+      "template": "custom",
+      "config": {
+        "project_id": "locationtech",
+        "repositories": [
+          {
+            "type": "maven2",
+            "env": "releases",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "STRICT" }
+          },
+          {
+            "type": "maven2",
+            "env": "snapshots",
+            "maven": { "version_policy": "SNAPSHOT", "layout_policy": "STRICT" }
+          },
+          {
+            "type": "maven2",
+            "env": "thirdparty",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "STRICT" }
+          }
+        ],
+        "create_group_auto": true
+      }
+    },
     { "id": "locationtech.geogig", "template": "maven2Standard" },
     { "id": "locationtech.geomesa", "template": "maven2Standard" },
     { "id": "locationtech.geotrellis", "template": "maven2Standard" },
@@ -395,7 +419,7 @@
     { "id": "technology.efxclipse", "template": "maven2Standard" },
     { "id": "technology.egit", "template": "maven2Standard" },
     { "id": "technology.golo", "template": "maven2Standard", "archived": true },
-    { "id": "technology.jgit", "template": "maven2Standard" },
+    { "id": "technology.jgit", "template": "maven2Permissive" },
     { "id": "technology.jnosql", "template": "maven2StagingOnly" },
     { "id": "technology.jubula", "template": "maven2Standard", "archived": true },
     { "id": "technology.lemminx", "template": "maven2Standard" },
@@ -415,7 +439,31 @@
     { "id": "tools.andmore", "template": "maven2Standard", "archived": true },
     { "id": "tools.linuxtools", "template": "maven2Standard" },
     { "id": "tools.mylyn", "template": "maven2Standard" },
-    { "id": "tools.orbit", "template": "maven2Standard" },
+    {
+      "id": "tools.orbit",
+      "template": "custom",
+      "config": {
+        "project_id": "tools.orbit",
+        "repositories": [
+          {
+            "type": "maven2",
+            "env": "releases",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "STRICT" }
+          },
+          {
+            "type": "maven2",
+            "env": "snapshots",
+            "maven": { "version_policy": "SNAPSHOT", "layout_policy": "STRICT" }
+          },
+          {
+            "type": "maven2",
+            "env": "approved-artifacts",
+            "maven": { "version_policy": "RELEASE", "layout_policy": "STRICT" }
+          }
+        ],
+        "create_group_auto": true
+      }
+    },
     { "id": "tools.ptp", "template": "maven2Standard", "archived": true },
     { "id": "tools.tm4e", "template": "maven2Standard" },
     { "id": "webtools", "template": "maven2Standard" }

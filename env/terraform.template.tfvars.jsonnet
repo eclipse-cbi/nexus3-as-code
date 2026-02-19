@@ -144,6 +144,18 @@ local projectTemplates = {
     ],
   } + (if archived then { archived: true } else {}),
 
+  // Maven2 Standard with PERMISSIVE layout_policy
+  maven2Permissive(projectId, archived=false, shortNameOverride=null):: 
+    local shortName = if shortNameOverride != null then shortNameOverride else utils.shortName(projectId);
+    {
+      project_id: projectId,
+      repositories: [
+        utils.repo('maven2', 'releases') + { maven: { version_policy: 'RELEASE', layout_policy: 'PERMISSIVE' } },
+        utils.repo('maven2', 'snapshots') + { maven: { version_policy: 'SNAPSHOT', layout_policy: 'PERMISSIVE' } },
+      ],
+      create_group_auto: true,
+    } + (if archived then { archived: true } else {}),
+
   // Custom template for special cases
   custom(config):: config,
 };
@@ -174,6 +186,8 @@ local generatedProjects = [
     projectTemplates.aptStandard(p.id, p.blobstoreName, archived)
   else if template == 'maven2StagingOnly' then
     projectTemplates.maven2StagingOnly(p.id, archived)
+  else if template == 'maven2Permissive' then
+    projectTemplates.maven2Permissive(p.id, archived)
   else if template == 'custom' then
     projectTemplates.custom(p.config)
   else
