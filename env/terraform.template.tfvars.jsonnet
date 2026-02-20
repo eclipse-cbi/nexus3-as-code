@@ -156,6 +156,24 @@ local projectTemplates = {
       create_group_auto: true,
     } + (if archived then { archived: true } else {}),
 
+  // Maven2 Standard with PERMISSIVE layout_policy and no strict content validation
+  maven2StandardNoStrictValidation(projectId, archived=false, shortNameOverride=null):: 
+    local shortName = if shortNameOverride != null then shortNameOverride else utils.shortName(projectId);
+    {
+      project_id: projectId,
+      repositories: [
+        utils.repo('maven2', 'releases') + {
+          maven: { version_policy: 'RELEASE', layout_policy: 'PERMISSIVE' },
+          storage: { strict_content_type_validation: false }
+        },
+        utils.repo('maven2', 'snapshots') + {
+          maven: { version_policy: 'SNAPSHOT', layout_policy: 'PERMISSIVE' },
+          storage: { strict_content_type_validation: false }
+        },
+      ],
+      create_group_auto: true,
+    } + (if archived then { archived: true } else {}),
+
   // Custom template for special cases
   custom(config):: config,
 };
@@ -166,32 +184,50 @@ local generatedProjects = [
   local template = p.template;
   local archived = if std.objectHas(p, 'archived') then p.archived else false;
   
-  if template == 'maven2Standard' then
-    projectTemplates.maven2Standard(p.id, archived)
-  else if template == 'maven2StandardWithStaging' then
-    projectTemplates.maven2StandardWithStaging(p.id, archived)
-  else if template == 'maven2LegacyStandard' then
-    projectTemplates.maven2LegacyStandard(
-      p.id, 
-      archived,
-      if std.objectHas(p, 'shortNameOverride') then p.shortNameOverride else null
-    )
-  else if template == 'maven2LegacyStandardWithStaging' then
-    projectTemplates.maven2LegacyStandardWithStaging(p.id, archived)
-  else if template == 'maven2LegacyCustomGroupName' then
-    projectTemplates.maven2LegacyCustomGroupName(p.id, p.customGroupPrefix, archived)
-  else if template == 'helmStandard' then
-    projectTemplates.helmStandard(p.id, archived)
-  else if template == 'aptStandard' then
-    projectTemplates.aptStandard(p.id, p.blobstoreName, archived)
-  else if template == 'maven2StagingOnly' then
-    projectTemplates.maven2StagingOnly(p.id, archived)
-  else if template == 'maven2Permissive' then
-    projectTemplates.maven2Permissive(p.id, archived)
-  else if template == 'custom' then
-    projectTemplates.custom(p.config)
-  else
-    error 'Unknown template: ' + template
+  local baseProject = 
+    if template == 'maven2Standard' then
+      projectTemplates.maven2Standard(p.id, archived)
+    else if template == 'maven2StandardWithStaging' then
+      projectTemplates.maven2StandardWithStaging(p.id, archived)
+    else if template == 'maven2LegacyStandard' then
+      projectTemplates.maven2LegacyStandard(
+        p.id, 
+        archived,
+        if std.objectHas(p, 'shortNameOverride') then p.shortNameOverride else null
+      )
+    else if template == 'maven2LegacyStandardWithStaging' then
+      projectTemplates.maven2LegacyStandardWithStaging(p.id, archived)
+    else if template == 'maven2LegacyCustomGroupName' then
+      projectTemplates.maven2LegacyCustomGroupName(p.id, p.customGroupPrefix, archived)
+    else if template == 'helmStandard' then
+      projectTemplates.helmStandard(p.id, archived)
+    else if template == 'aptStandard' then
+      projectTemplates.aptStandard(p.id, p.blobstoreName, archived)
+    else if template == 'maven2StagingOnly' then
+      projectTemplates.maven2StagingOnly(p.id, archived)
+    else if template == 'maven2Permissive' then
+      projectTemplates.maven2Permissive(p.id, archived)
+    else if template == 'maven2StandardNoStrictValidation' then
+      projectTemplates.maven2StandardNoStrictValidation(p.id, archived)
+    else if template == 'custom' then
+      projectTemplates.custom(p.config)
+    else
+      error 'Unknown template: ' + template;
+  
+  // Merge template result with additional properties from p
+  baseProject + (
+    if std.objectHas(p, 'blobstore_soft_quota_limit') then 
+      { blobstore_soft_quota_limit: p.blobstore_soft_quota_limit } 
+    else {}
+  ) + (
+    if std.objectHas(p, 'blobstore_soft_quota_type') then 
+      { blobstore_soft_quota_type: p.blobstore_soft_quota_type } 
+    else {}
+  ) + (
+    if std.objectHas(p, 'force_token_update') then 
+      { force_token_update: p.force_token_update } 
+    else {}
+  )
   for i in std.range(0, std.length(data.projects) - 1)
 ];
 
