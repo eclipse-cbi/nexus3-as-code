@@ -427,6 +427,7 @@
     { "id": "technology.lsp4mp", "template": "maven2Standard" },
     { "id": "technology.lyo", "template": "maven2Standard" },
     { "id": "technology.microprofile", "template": "maven2Standard" },
+    { "id": "technology.microprofile", "template": "maven2StagingOnly" },
     { "id": "technology.nebula.nattable", "template": "maven2Standard" },
     { "id": "technology.ogee", "template": "maven2Standard", "archived": true },
     { "id": "technology.openk-platform", "template": "maven2Standard", "archived": true },
