@@ -272,4 +272,23 @@ locals {
       proxy = merge(var.default_proxy_config, try(repo.proxy, { "remote_url" : "http://archive.ubuntu.com/ubuntu/" }))
     }) if repo != null && repo.type == "apt"
   ]
+
+  raw_proxies = concat(
+    [
+      for repo in local.transform_global_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "raw"
+    ],
+    [
+      for repo in local.transform_proxies : merge(repo, {
+        proxy = merge(
+          var.default_proxy_config,
+          try(repo.proxy, {})
+        )
+      }) if repo != null && repo.type == "raw"
+    ]
+  )
 }

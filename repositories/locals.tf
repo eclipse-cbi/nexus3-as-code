@@ -99,4 +99,8 @@ locals {
     for repo in local.transform_repositories : repo if repo != null && repo.type == "apt"
   ]
 
+  raw_repositories = [
+    for repo in local.transform_repositories : repo if repo != null && repo.type == "raw"
+  ]
+
 }

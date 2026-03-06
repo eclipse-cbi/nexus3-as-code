@@ -307,6 +307,43 @@ locals {
       )
     }) if groups.type == "pypi"
   ]
+
+  raw_repositories_group = [
+    for groups in local.all_repositories_groups : merge(var.default_repository_config, groups, {
+      base_name = coalesce(try(local.transformed_groups[groups.project_id].raw.name, null), groups.short_code)
+
+      # Final group name - support custom groups with explicit custom_name
+      final_name = (
+        try(groups.custom_name, null) != null ? (
+          # Custom name from group definition (for custom groups with members)
+          "${groups.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+          ) : try(groups.custom_group_name, null) != null ? (
+          # With custom_group_name: add type and/or suffix if requested
+          "${groups.custom_group_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+          ) : try(local.transformed_groups[groups.project_id].raw.custom_name, null) != null ? (
+          # With custom_name from groups config
+          "${local.transformed_groups[groups.project_id].raw.custom_name}${groups.include_type_in_name ? "-${groups.type}" : ""}${groups.group_suffix != "" && groups.group_suffix != null ? "-${groups.group_suffix}" : ""}"
+          ) : (
+          # Standard name generation
+          groups.group_suffix != "" && groups.group_suffix != null ? (
+            groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].raw.name, null), groups.short_code)}-${groups.type}-${groups.group_suffix}" : "${coalesce(try(local.transformed_groups[groups.project_id].raw.name, null), groups.short_code)}-${groups.group_suffix}"
+            ) : (
+            groups.include_type_in_name ? "${coalesce(try(local.transformed_groups[groups.project_id].raw.name, null), groups.short_code)}-${groups.type}" : coalesce(try(local.transformed_groups[groups.project_id].raw.name, null), groups.short_code)
+          )
+        )
+      )
+
+      storage = merge(
+        var.default_storage_config,
+        try(var.defaults.groups.raw.storage, {}),
+        try(local.transformed_groups[groups.project_id].raw.storage, {}),
+        # Override blob_store_name with project-specific blobstore if available
+        length(var.project_blobstores) > 0 && lookup(var.project_blobstores, groups.project_id, null) != null ? {
+          blob_store_name = var.project_blobstores[groups.project_id]
+        } : {}
+      )
+    }) if groups.type == "raw"
+  ]
 }
 
 output "transformed_projects" {
