@@ -1,9 +1,9 @@
 {
   "config": {
-    "repo_address": "https://repo3.eclipsecontent.org",
+    "repo_address": "https://repo.eclipsecontent.org",
     "repo_insecure": false,
     "secretsmanager_address": "https://secretsmanager-dev.eclipse.org",
-    "secretsmanager_path": "repo3.eclipse.org",
+    "secretsmanager_path": "repo.eclipse.org",
     "defaults": {}
   },
   "projects": [

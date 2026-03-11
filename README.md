@@ -89,7 +89,7 @@ All data are stored in file `terraform.${NEXUS_ENV}.tfvars.json`.
 
 | Variable Name | Description | Value |
 | --- | --- | --- |
-| `repo_address` | Nexus3 instance to target | `"https://repo3.eclipse.org"` |
+| `repo_address` | Nexus3 instance to target | `"https://repo.eclipse.org"` |
 | `repo_insecure` | Nexus3 mode insecure | `true` |
 | `secretsmanager_address` | Secrets manager address. | `https://secretsmanager-staging.eclipse.org` |
 | `secretsmanager_path` | Secrets manager path. | `repo.eclipse.org` |

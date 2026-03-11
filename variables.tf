@@ -12,7 +12,7 @@ variable "secretsmanager_address" {
 
 variable "secretsmanager_path" {
   type        = string
-  description = "Path suffix for secrets in Vault (e.g., 'repo3.eclipse.org')"
+  description = "Path suffix for secrets in Vault (e.g., 'repo.eclipse.org')"
   default     = "repo.eclipse.org"
 }
 
