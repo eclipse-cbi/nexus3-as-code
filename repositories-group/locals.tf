@@ -64,21 +64,21 @@ locals {
 
   # Standard groups from repositories and proxies
   transformed_repositories_groups = [
-    for k, v in { for a in local.combined : a.project_id => a... } :
+    for k, v in { for a in local.combined : "${a.project_id}|${a.type}" => a... } :
     {
-      project_id           = k
-      type                 = v[0].type
-      short_code           = element(reverse(split(".", k)), 0)
-      base_name            = try(v[0].base_name, element(reverse(split(".", k)), 0))
+      project_id           = split("|", k)[0]
+      type                 = split("|", k)[1]
+      short_code           = element(reverse(split(".", split("|", k)[0])), 0)
+      base_name            = try(v[0].base_name, element(reverse(split(".", split("|", k)[0])), 0))
       include_type_in_name = try(v[0].include_type_in_name, true)
       group_suffix         = try(v[0].group_suffix, "")
       custom_group_name    = try(v[0].custom_group_name, null)
-      group                = distinct(flatten([for g in v[*] : g.group if g.type == v[0].type]))
-      proxy_group          = distinct(flatten([for g in v[*] : g.proxy_group if g.type == v[0].type]))
+      group                = distinct(flatten([for g in v[*] : g.group if g.type == split("|", k)[1]]))
+      proxy_group          = distinct(flatten([for g in v[*] : g.proxy_group if g.type == split("|", k)[1]]))
       custom_members       = null # No custom members for auto-generated groups
     }
     # Filter out projects that have create_group_auto = false (default behavior)
-    if try([for project in var.projects : project.create_group_auto if project.project_id == k][0], false) == true
+    if try([for project in var.projects : project.create_group_auto if project.project_id == split("|", k)[0]][0], false) == true
   ]
 
   # Custom groups with explicit members from groups configuration
