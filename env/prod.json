@@ -443,7 +443,7 @@
     { "id": "technology.nebula.nattable", "template": "maven2Standard" },
     { "id": "technology.ogee", "template": "maven2Standard", "archived": true },
     { "id": "technology.openk-platform", "template": "maven2Standard", "archived": true },
-    { "id": "technology.rcptt", "template": "maven2Standard" },
+    { "id": "technology.rcptt", "template": "maven2Standard", "blobstore_soft_quota_limit": 95 },
     { "id": "technology.recommenders", "template": "maven2Standard", "archived": true },
     { "id": "technology.scout", "template": "maven2Standard" },
     { "id": "technology.sensinact", "template": "maven2Standard" },
