@@ -29,7 +29,8 @@ variable "global_groups" {
       env  = string
       type = string
     }))
-    members = optional(list(string))
+    members             = optional(list(string))
+    additional_members  = optional(list(string))
   }))
   default = []
 }

@@ -27,7 +27,15 @@ local utils = {
     type: type,
     env: env,
     custom_name: customName,
-  },
+  } + (
+    if type == 'maven2' && env == 'releases' then {
+      maven: { version_policy: 'RELEASE', layout_policy: 'STRICT' }
+    } else if type == 'maven2' && env == 'snapshots' then {
+      maven: { version_policy: 'SNAPSHOT', layout_policy: 'STRICT' }
+    } else if type == 'maven2' && env == 'staging' then {
+      maven: { version_policy: 'MIXED', layout_policy: 'STRICT' }
+    } else {}
+  ),
 
   customGroup(type, customName, members):: {
     type: type,
@@ -43,12 +51,20 @@ local projectTemplates = {
     local shortName = if shortNameOverride != null then shortNameOverride else utils.shortName(projectId);
     {
       project_id: projectId,
-      repositories: [
+      repositories: if shortNameOverride != null then [
+        utils.customRepo('maven2', 'releases', shortNameOverride),
+        utils.customRepo('maven2', 'snapshots', shortNameOverride),
+      ] else [
         utils.repo('maven2', 'releases'),
         utils.repo('maven2', 'snapshots'),
       ],
+    } + (if shortNameOverride != null then {
+      groups: [
+        utils.customGroup('maven2', shortName + '-maven2', [shortName + '-maven2-releases', shortName + '-maven2-snapshots']),
+      ],
+    } else {
       create_group_auto: true,
-    } + (if archived then { archived: true } else {}),
+    }) + (if archived then { archived: true } else {}),
 
   maven2LegacyStandard(projectId, archived=false, shortNameOverride=null):: 
     local shortName = if shortNameOverride != null then shortNameOverride else utils.shortName(projectId);
@@ -80,11 +96,16 @@ local projectTemplates = {
   // Maven2 Standard with staging
   maven2StandardWithStaging(projectId, archived=false, shortNameOverride=null):: 
     local base = self.maven2Standard(projectId, archived, shortNameOverride);
+    local shortName = if shortNameOverride != null then shortNameOverride else utils.shortName(projectId);
     base + {
       repositories: base.repositories + [
-        utils.repo('maven2', 'staging'),
+        if shortNameOverride != null then utils.customRepo('maven2', 'staging', shortName) else utils.repo('maven2', 'staging'),
       ],
-    },
+    } + (if shortNameOverride != null then {
+      groups: [
+        utils.customGroup('maven2', shortName + '-maven2', [shortName + '-maven2-releases', shortName + '-maven2-snapshots', shortName + '-maven2-staging']),
+      ],
+    } else {}),
 
   // Maven2 Legacy with custom group names
   maven2LegacyCustomGroupName(projectId, customGroupPrefix, archived=false):: 
@@ -188,7 +209,11 @@ local generatedProjects = [
     if template == 'maven2Standard' then
       projectTemplates.maven2Standard(p.id, archived)
     else if template == 'maven2StandardWithStaging' then
-      projectTemplates.maven2StandardWithStaging(p.id, archived)
+      projectTemplates.maven2StandardWithStaging(
+        p.id, 
+        archived,
+        if std.objectHas(p, 'shortNameOverride') then p.shortNameOverride else null
+      )
     else if template == 'maven2LegacyStandard' then
       projectTemplates.maven2LegacyStandard(
         p.id, 

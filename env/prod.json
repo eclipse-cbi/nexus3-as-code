@@ -35,7 +35,8 @@
         "auto_collect": {
           "env": "releases",
           "type": "maven2"
-        }
+        },
+        "additional_members": ["orbit-maven2-approved-artifacts"]
       },
       {
         "type": "maven2",
@@ -50,7 +51,7 @@
         "type": "maven2",
         "custom_name": "maven-central",
         "include_type_in_name": false,
-        "members": ["maven-central-releases-proxy", "maven-central-snapshots-proxy"]
+        "members": ["maven-central-releases-proxy", "maven-central-snapshots-proxy", "maven2-releases", "maven2-snapshots"]
       }
     ],
     "global_proxies": [
@@ -144,7 +145,7 @@
     { "id": "automotive.sumo", "template": "maven2Standard" },
     { "id": "automotive.tractusx", "template": "helmStandard" },
     { "id": "ecd.orion", "template": "maven2Standard", "archived": true },
-    { "id": "eclipse", "template": "maven2StandardWithStaging" },
+    { "id": "eclipse.platform.releng", "template": "maven2StandardWithStaging", "shortNameOverride": "eclipse" },
     {
       "id": "eclipse.jdt.ls",
       "template": "custom",
@@ -288,7 +289,7 @@
     { "id": "ee4j.jakartaee-tck", "template": "maven2StagingOnly" },
     { "id": "ee4j.jaxb", "template": "maven2StagingOnly" },
     { "id": "ee4j.jaxb-impl", "template": "maven2StagingOnly" },
-    { "id": "ee4j.jaxws", "template": "maven2StandardWithStaging", "shortNameOverride": "test-jax-rs-api" },
+    { "id": "ee4j.jaxws", "template": "maven2StandardWithStaging" },
     { "id": "ee4j.jca", "template": "maven2StagingOnly" },
     { "id": "ee4j.jersey", "template": "maven2StagingOnly" },
     { "id": "ee4j.jpa", "template": "maven2StagingOnly" },
