@@ -67,6 +67,13 @@
         "storage": {
           "blob_store_name": "blobs-proxy-maven2",
           "strict_content_type_validation": true
+        },
+        "negative_cache": {
+          "enabled": true,
+          "ttl": 10
+        },
+        "proxy": {
+          "metadata_max_age": 60
         }
       },
       {
@@ -81,6 +88,13 @@
         "storage": {
           "blob_store_name": "blobs-proxy-maven2",
           "strict_content_type_validation": true
+        },
+        "negative_cache": {
+          "enabled": true,
+          "ttl": 10
+        },
+        "proxy": {
+          "metadata_max_age": 60
         }
       },
       {
