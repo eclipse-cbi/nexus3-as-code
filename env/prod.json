@@ -151,7 +151,6 @@
         "project_id": "automotive.score",
         "repositories": [
           { "type": "raw", "env": "releases" },
-          { "type": "docker", "env": "releases" },
           { "type": "npm", "env": "releases" }
         ]
       }
