@@ -204,6 +204,7 @@ local generatedProjects = [
   local p = data.projects[i];
   local template = p.template;
   local archived = if std.objectHas(p, 'archived') then p.archived else false;
+  local blobstoreName = if std.objectHas(p, 'blobstoreName') then p.blobstoreName else null;
   
   local baseProject = 
     if template == 'maven2Standard' then
@@ -227,7 +228,7 @@ local generatedProjects = [
     else if template == 'helmStandard' then
       projectTemplates.helmStandard(p.id, archived)
     else if template == 'aptStandard' then
-      projectTemplates.aptStandard(p.id, p.blobstoreName, archived)
+      projectTemplates.aptStandard(p.id, blobstoreName, archived)
     else if template == 'maven2StagingOnly' then
       projectTemplates.maven2StagingOnly(p.id, archived)
     else if template == 'maven2Permissive' then
