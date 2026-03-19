@@ -8,6 +8,7 @@ locals {
       soft_quota_limit   = try(project.blobstore_soft_quota_limit, var.default_soft_quota_limit)
       soft_quota_type    = try(project.blobstore_soft_quota_type, var.default_soft_quota_type)
       external_blobstore = try(project.external_blobstore, false) # true if blobstore already exists
+      shared_perms_from  = try(project.shared_perms_from, null) # Projects sharing perms don't need blobstores
     }
   }
 
@@ -28,11 +29,11 @@ locals {
       name => items[0]
   }
 
-  # Blobstores to create (only for projects without explicit blobstore_name)
+  # Blobstores to create (only for projects without explicit blobstore_name and without shared_perms_from)
   blobstores_to_create = merge(
     {
       for k, v in local.project_blobstores : k => v
-      if v.external_blobstore == false
+      if v.external_blobstore == false && v.shared_perms_from == null
     },
     local.global_proxy_blobstores
   )

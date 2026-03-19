@@ -161,6 +161,14 @@
     { "id": "ecd.orion", "template": "maven2Standard", "archived": true },
     { "id": "eclipse.platform.releng", "template": "maven2StandardWithStaging", "shortNameOverride": "eclipse" },
     {
+      "id": "eclipse.platform",
+      "template": "custom",
+      "config": {
+        "project_id": "eclipse.platform",
+        "shared_perms_from": "eclipse.platform.releng"
+      }
+    },
+    {
       "id": "eclipse.jdt.ls",
       "template": "custom",
       "config": {

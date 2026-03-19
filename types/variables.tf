@@ -429,6 +429,7 @@ variable "defaults" {
 variable "projects" {
   type = list(object({
     project_id = string
+    shared_perms_from = optional(string)
     proxies = optional(list(object({
       name = optional(string)
       type = string

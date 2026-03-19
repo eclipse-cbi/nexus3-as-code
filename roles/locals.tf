@@ -4,6 +4,7 @@ locals {
     for project in var.projects : {
       project_id = project.project_id
       short_code = element(reverse(split(".", project.project_id)), 0)
+      shared_perms_from = try(project.shared_perms_from, null)
       repositories = [
         for repo in try(project.repositories, []) : {
           base_name            = coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))
@@ -47,16 +48,33 @@ locals {
     }
   ]
 
+  # Create a map of project roles for easy lookup by shared_perms_from
+  project_roles_map = {
+    for project in local.calculated_repositories : project.project_id => {
+      repositories_roles = [
+        for repo in project.repositories : "${repo.name}-perm"
+      ]
+      proxies_roles = [
+        for proxy in project.proxies : "${proxy.name}-perm"
+      ]
+    }
+  }
+
+  # Include all projects, but use permissions from referenced project if shared_perms_from is set
   project_transform = [
     for project in local.calculated_repositories : {
       project_id = project.project_id
       short_code = project.short_code
 
-      # Use computed names + "-perm" suffix
-      proxies_roles = [
+      # If shared_perms_from is set, use permissions from the referenced project
+      proxies_roles = project.shared_perms_from != null ? (
+        try(local.project_roles_map[project.shared_perms_from].proxies_roles, [])
+      ) : [
         for proxy in project.proxies : "${proxy.name}-perm"
       ]
-      repositories_roles = [
+      repositories_roles = project.shared_perms_from != null ? (
+        try(local.project_roles_map[project.shared_perms_from].repositories_roles, [])
+      ) : [
         for repo in project.repositories : "${repo.name}-perm"
       ]
     }

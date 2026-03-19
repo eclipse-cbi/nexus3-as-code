@@ -61,10 +61,10 @@ resource "nexus_security_role" "role_bot_token" {
 
 resource "nexus_security_user" "bot_user" {
   for_each   = { for project in local.project_transform : project.project_id => project }
-  userid     = length(local.project_split[each.key]) > 1 ? "eclipse-${local.project_split[each.key][1]}-bot" : "eclipse-${each.key}-bot"
+  userid     = "eclipse-${each.value.short_code}-bot"
   firstname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
-  lastname   = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][1] : each.key
-  email      = length(local.project_split[each.key]) > 1 ? "${local.project_split[each.key][1]}-bot@eclipse.org" : "${each.key}-bot@eclipse.org"
+  lastname   = each.value.short_code
+  email      = "${each.value.short_code}-bot@eclipse.org"
   password   = local.bot_passwords[each.key]
   # Use role IDs to create implicit dependency on roles module
   roles      = flatten([
