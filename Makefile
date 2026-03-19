@@ -4,7 +4,7 @@
 # Variables
 JSONNET_FILE ?= env/terraform.$(NEXUS_ENV).tfvars.jsonnet
 TF_VAR_FILE ?= terraform.$(NEXUS_ENV).tfvars.json
-TF_PARALLELISM ?= 30
+TF_PARALLELISM ?= 20
 
 help: ## Display this help message
 	@echo "Available command :"
