@@ -143,6 +143,7 @@
     ]
   },
   "projects": [
+    { "id": "automotive.ankaios", "template": "aptStandard" },
     { "id": "automotive.mosaic", "template": "maven2Standard" },
     {
       "id": "automotive.score",
