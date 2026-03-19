@@ -91,6 +91,8 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
     - [Renewing Bot Secrets (force\_token\_update)](#renewing-bot-secrets-force_token_update)
       - [Use Case](#use-case-1)
       - [Procedure](#procedure)
+      - [Important Notes](#important-notes)
+      - [Common Scenarios](#common-scenarios)
       - [Accessing Updated Credentials](#accessing-updated-credentials)
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
@@ -1484,7 +1486,6 @@ The bot password for `eclipse.platform.releng` needs to be regenerated and updat
 2. **Apply the configuration**:
 
 ```bash
-make generate
 make apply
 ```
 
@@ -1508,7 +1509,6 @@ This will:
 4. **Apply again** to persist the clean configuration:
 
 ```bash
-make generate
 make apply
 ```
 
@@ -1559,10 +1559,7 @@ After renewal, retrieve credentials from Vault:
 
 ```bash
 # Using Vault CLI
-vault kv get -mount="cbi" "eclipse.platform.releng/repo.eclipse.org"
-
-# Or use the fetch script
-./users/fetch_user_token.sh eclipse-releng-bot
+vault kv get -mount="cbi" "<project_id>/repo.eclipse.org"
 ```
 
 ---
