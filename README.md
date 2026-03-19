@@ -83,6 +83,15 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
     - [5. Handling Archived Projects](#5-handling-archived-projects)
     - [6. Blob Store Management](#6-blob-store-management)
     - [7. Handling Terraform Lock Files](#7-handling-terraform-lock-files)
+  - [Bot Management](#bot-management)
+    - [Sharing Permissions Between Projects (shared\_perms\_from)](#sharing-permissions-between-projects-shared_perms_from)
+      - [Use Case](#use-case)
+      - [Configuration](#configuration)
+      - [What This Creates](#what-this-creates)
+    - [Renewing Bot Secrets (force\_token\_update)](#renewing-bot-secrets-force_token_update)
+      - [Use Case](#use-case-1)
+      - [Procedure](#procedure)
+      - [Accessing Updated Credentials](#accessing-updated-credentials)
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
       - [1. "Error: workspace doesn't exist"](#1-error-workspace-doesnt-exist)
@@ -1384,6 +1393,176 @@ terraform force-unlock <lock-id>
 make status
 # Or list resources
 terraform state list
+```
+
+---
+
+## Bot Management
+
+### Sharing Permissions Between Projects (shared_perms_from)
+
+When you have multiple related projects that need access to the same repositories but require separate bot accounts, use the `shared_perms_from` feature. This allows projects to share repository resources and permissions without duplicating Nexus resources.
+
+#### Use Case
+
+Projects `eclipse.platform` and `eclipse.platform.releng` both need access to the same Maven repositories, but each requires its own bot account with similar permissions.
+
+#### Configuration
+
+In the environment configuration file (e.g., `env/<env>.json`):
+
+```json
+{
+  "projects": [
+    {
+      "id": "eclipse.platform.releng",
+      "template": "maven2StandardWithStaging",
+      "config": {
+        "project_id": "eclipse.platform.releng"
+      }
+    },
+    {
+      "id": "eclipse.platform",
+      "template": "custom",
+      "config": {
+        "project_id": "eclipse.platform",
+        "shared_perms_from": "eclipse.platform.releng"
+      }
+    }
+  ]
+}
+```
+
+#### What This Creates
+
+**For `eclipse.platform.releng`** (main project):
+- Blobstore: `eclipse-platform-releng`
+- Repositories:
+  - `eclipse-releng-maven2-releases`
+  - `eclipse-releng-maven2-snapshots`
+  - `eclipse-releng-maven2-staging`
+- Repository group: `eclipse-releng-maven2`
+- Bot: `eclipse-releng-bot`
+- Role: `releng-repository-bot-role` (with permissions to all repositories)
+
+**For `eclipse.platform`** (shared permissions project):
+- Bot: `eclipse-platform-bot`
+- Role: `platform-repository-bot-role` (with same permissions as releng role)
+- **No duplicate resources**: Uses existing repositories from `eclipse.platform.releng`
+
+NOTE:
+
+- The referenced project (specified in `shared_perms_from`) must be defined **before** the sharing project in the configuration
+- Bot credentials are stored separately in Vault: `repo.eclipse.org/bot/<bot-userid>`
+- Both bots can publish to the same repositories simultaneously
+
+---
+
+### Renewing Bot Secrets (force_token_update)
+
+When you need to regenerate bot credentials (e.g., for security rotation or when credentials are compromised), use the `force_token_update` flag.
+
+#### Use Case
+
+The bot password for `eclipse.platform.releng` needs to be regenerated and updated in Vault.
+
+#### Procedure
+
+1. **Add force_token_update flag** to your project configuration:
+
+```json
+{
+  "id": "eclipse.platform.releng",
+  "template": "maven2StandardWithStaging",
+  "config": {
+    "project_id": "eclipse.platform.releng",
+    "force_token_update": true
+  }
+}
+```
+
+2. **Apply the configuration**:
+
+```bash
+make generate
+make apply
+```
+
+This will:
+- Generate a new random password for the bot
+- Update the bot's password in Nexus
+- Store the new credentials in Vault at: `cbi/eclipse.platform.releng/repo.eclipse.org`
+
+3. **Remove the flag** after successful update:
+
+```json
+{
+  "id": "eclipse.platform.releng",
+  "template": "maven2StandardWithStaging",
+  "config": {
+    "project_id": "eclipse.platform.releng"
+  }
+}
+```
+
+4. **Apply again** to persist the clean configuration:
+
+```bash
+make generate
+make apply
+```
+
+#### Important Notes
+
+- **Temporary Flag**: The `force_token_update` flag should only be present during the credential renewal operation
+- **Automatic Cleanup**: Always remove the flag after credentials are successfully updated
+- **Vault Integration**: New credentials are automatically stored in Vault
+- **Secret Protection**: The `ignore_changes` lifecycle rule prevents accidental credential updates
+- **Required for Username Changes**: Also use this flag when bot usernames change (e.g., after refactoring project structure)
+
+#### Common Scenarios
+
+**Scenario 1: Renew Bot Password**
+```json
+// Step 1: Add flag
+{ "id": "myproject", "template": "maven2Standard", "force_token_update": true }
+// Step 2: Apply → password regenerated
+// Step 3: Remove flag
+{ "id": "myproject", "template": "maven2Standard" }
+// Step 4: Apply → configuration cleaned
+```
+
+**Scenario 2: Update Bot Username After Refactoring**
+
+If bot userid changes (e.g., from `eclipse-platform-bot` to `eclipse-releng-bot`), the Vault secret must be updated:
+
+```json
+// Before: eclipse.platform with bot eclipse-platform-bot
+// After: Renamed to eclipse.platform.releng, bot should be eclipse-releng-bot
+
+// Step 1: Add force_token_update to trigger Vault secret update
+{
+  "id": "eclipse.platform.releng",
+  "template": "maven2StandardWithStaging",
+  "force_token_update": true
+}
+
+// Step 2: Apply → Vault secret updated with new username
+// Step 3: Remove flag and apply again
+```
+
+The `force_token_update` flag bypasses Terraform's `ignore_changes` protection on the Vault secret, allowing the username and other fields to be updated.
+
+#### Accessing Updated Credentials
+
+After renewal, retrieve credentials from Vault:
+
+```bash
+# Using Vault CLI
+vault kv get -mount="cbi" "eclipse.platform.releng/repo.eclipse.org"
+
+# Or use the fetch script
+./users/fetch_user_token.sh eclipse-releng-bot
 ```
 
 ---

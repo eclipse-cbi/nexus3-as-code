@@ -72,8 +72,9 @@ locals {
           repo,
           {
             project_id = project.project_id
-            short_code = element(reverse(split(".", project.project_id)), 0)
-            base_name  = coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))
+            # Use shortNameOverride if available, otherwise derive from project_id
+            short_code = try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0))
+            base_name  = coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))
 
             # Name customization attributes
             include_type_in_name = try(repo.include_type_in_name, true) # Default: include type in name
@@ -86,10 +87,10 @@ locals {
                 # With custom_name: add type if requested, always add proxy_suffix
                 "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.proxy_suffix, var.default_proxy_suffix)}"
                 ) : (
-                # Without custom_name: standard name generation with proxy_suffix
+                # Without custom_name: standard name generation with proxy_suffix using shortNameOverride if available
                 try(repo.include_type_in_name, true) ?
-                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.proxy_suffix, var.default_proxy_suffix)}" :
-                "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.proxy_suffix, var.default_proxy_suffix)}"
+                "${coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))}-${repo.type}${try(repo.proxy_suffix, var.default_proxy_suffix)}" :
+                "${coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))}${try(repo.proxy_suffix, var.default_proxy_suffix)}"
               )
             )
 

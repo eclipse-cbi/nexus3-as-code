@@ -1,6 +1,6 @@
 resource "nexus_security_role" "role_project_repository" {
   for_each = {
-    for project in local.project_transform : project.short_code => project
+    for project in local.project_transform : project.bot_code => project
   }
 
   roleid      = "${each.key}-repository-bot-role"
@@ -11,7 +11,7 @@ resource "nexus_security_role" "role_project_repository" {
 
 resource "nexus_security_role" "role_project_proxy" {
   for_each = {
-    for project in local.project_transform : project.short_code => project
+    for project in local.project_transform : project.bot_code => project
   }
 
   roleid      = "${each.key}-proxy-bot-role"

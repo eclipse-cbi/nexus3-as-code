@@ -68,7 +68,8 @@ locals {
     {
       project_id           = split("|", k)[0]
       type                 = split("|", k)[1]
-      short_code           = element(reverse(split(".", split("|", k)[0])), 0)
+      # Use shortNameOverride if available, otherwise derive from project_id
+      short_code           = try([for project in var.projects : try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)) if project.project_id == split("|", k)[0]][0], element(reverse(split(".", split("|", k)[0])), 0))
       base_name            = try(v[0].base_name, element(reverse(split(".", split("|", k)[0])), 0))
       include_type_in_name = try(v[0].include_type_in_name, true)
       group_suffix         = try(v[0].group_suffix, "")
@@ -87,7 +88,8 @@ locals {
       for group in try(project.groups, []) : {
         project_id           = project.project_id
         type                 = group.type
-        short_code           = element(reverse(split(".", project.project_id)), 0)
+        # Use shortNameOverride if available, otherwise derive from project_id
+        short_code           = try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0))
         base_name            = try(group.name, element(reverse(split(".", project.project_id)), 0))
         include_type_in_name = try(group.include_type_in_name, false)
         group_suffix         = try(group.group_suffix, "")

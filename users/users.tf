@@ -61,10 +61,10 @@ resource "nexus_security_role" "role_bot_token" {
 
 resource "nexus_security_user" "bot_user" {
   for_each   = { for project in local.project_transform : project.project_id => project }
-  userid     = "eclipse-${each.value.short_code}-bot"
+  userid     = "eclipse-${each.value.bot_code}-bot"
   firstname  = length(local.project_split[each.key]) > 1 ? local.project_split[each.key][0] : each.key
-  lastname   = each.value.short_code
-  email      = "${each.value.short_code}-bot@eclipse.org"
+  lastname   = each.value.bot_code
+  email      = "${each.value.bot_code}-bot@eclipse.org"
   password   = local.bot_passwords[each.key]
   # Use role IDs to create implicit dependency on roles module
   roles      = flatten([
@@ -131,7 +131,9 @@ resource "vault_kv_secret_v2" "bot_token_creds" {
   }
 
   lifecycle {
-    # Only ignore changes to the credentials, but allow force_update metadata to trigger updates
+    # Ignore changes to data_json to prevent unnecessary updates
+    # To force an update (e.g., when username changes), set force_token_update=true
+    # The custom_metadata change will trigger a replacement of the secret
     ignore_changes = [
       data_json,
     ]

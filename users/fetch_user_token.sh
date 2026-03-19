@@ -13,7 +13,7 @@
 # Author:
 #   Sonatype Support Team
 # ##########################################################
-
+set -x
 function base64_encode(){
   local to_encode="$1"
   local result="NOT-BASE64-ENCODED"

@@ -3,7 +3,8 @@ locals {
   calculated_repositories = [
     for project in var.projects : {
       project_id = project.project_id
-      short_code = element(reverse(split(".", project.project_id)), 0)
+      # bot_code is always derived from project_id for role naming
+      bot_code = element(reverse(split(".", project.project_id)), 0)
       shared_perms_from = try(project.shared_perms_from, null)
       repositories = [
         for repo in try(project.repositories, []) : {
@@ -64,7 +65,7 @@ locals {
   project_transform = [
     for project in local.calculated_repositories : {
       project_id = project.project_id
-      short_code = project.short_code
+      bot_code = project.bot_code
 
       # If shared_perms_from is set, use permissions from the referenced project
       proxies_roles = project.shared_perms_from != null ? (

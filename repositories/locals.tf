@@ -8,8 +8,9 @@ locals {
         repo,
         {
           project_id = project.project_id
-          short_code = element(reverse(split(".", project.project_id)), 0)
-          base_name  = coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))
+          # Use shortNameOverride if available, otherwise derive from project_id
+          short_code = try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0))
+          base_name  = coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))
 
           # Name customization attributes
           include_type_in_name = try(repo.include_type_in_name, true) # Default: include type in name
@@ -22,10 +23,10 @@ locals {
               # With custom_name: add type and/or env if requested
               "${repo.custom_name}${try(repo.include_type_in_name, true) ? "-${repo.type}" : ""}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
               ) : (
-              # Without custom_name: standard name generation
+              # Without custom_name: standard name generation using shortNameOverride if available
               try(repo.include_type_in_name, true) ?
-              "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
-              "${coalesce(try(repo.name, null), element(reverse(split(".", project.project_id)), 0))}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
+              "${coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))}-${repo.type}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}" :
+              "${coalesce(try(repo.name, null), try(project.shortNameOverride, element(reverse(split(".", project.project_id)), 0)))}${try(repo.include_env_in_name, true) && try(repo.env, "") != "" ? "-${repo.env}" : ""}"
             )
           )
 
