@@ -46,6 +46,70 @@ apply: check compile-jsonnet validate ## Apply Terraform configuration
 	@echo "🚀 Applying Terraform configuration..."
 	terraform apply -var-file=$(TF_VAR_FILE)  -parallelism=$(TF_PARALLELISM)
 
+plan-project: check compile-jsonnet validate ## Plan changes for a specific project (usage: make plan-project PROJECT=tm4e)
+	@if [ -z "$(PROJECT)" ]; then \
+		echo "❌ Error: PROJECT is required. Usage: make plan-project PROJECT=tm4e"; \
+		exit 1; \
+	fi
+	@echo "📋 Planning deployment for project: $(PROJECT)..."
+	@terraform plan -var-file=$(TF_VAR_FILE) -parallelism=$(TF_PARALLELISM) \
+		-target='module.blobstores.nexus_blobstore_file.project_blobstore["$(PROJECT)"]' \
+		-target='module.users.vault_kv_secret_v2.bot_secret["$(PROJECT)"]' \
+		-target='module.users.nexus_security_user.bot["$(PROJECT)"]' \
+		-target='module.roles.nexus_security_role.role_project_repository["$(PROJECT)"]' \
+		-target='module.roles.nexus_security_role.role_project_proxy["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_apt_hosted.apt_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_docker_hosted.docker_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_helm_hosted.helm_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_maven_hosted.maven_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_npm_hosted.npm_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_pypi_hosted.pypi_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_raw_hosted.raw_hosted["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_apt_proxy.apt_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_docker_proxy.docker_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_helm_proxy.helm_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_maven_proxy.maven_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_npm_proxy.npm_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_pypi_proxy.pypi_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_raw_proxy.raw_proxy["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_docker_group.docker_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_maven_group.maven_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_npm_group.npm_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_pypi_group.pypi_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_raw_group.raw_repositories_group["$(PROJECT)"]'
+
+apply-project: check compile-jsonnet validate ## Apply changes for a specific project (usage: make apply-project PROJECT=tm4e)
+	@if [ -z "$(PROJECT)" ]; then \
+		echo "❌ Error: PROJECT is required. Usage: make apply-project PROJECT=tm4e"; \
+		exit 1; \
+	fi
+	@echo "🚀 Applying Terraform configuration for project: $(PROJECT)..."
+	@terraform apply -var-file=$(TF_VAR_FILE) -parallelism=$(TF_PARALLELISM) \
+		-target='module.blobstores.nexus_blobstore_file.project_blobstore["$(PROJECT)"]' \
+		-target='module.users.vault_kv_secret_v2.bot_secret["$(PROJECT)"]' \
+		-target='module.users.nexus_security_user.bot["$(PROJECT)"]' \
+		-target='module.roles.nexus_security_role.role_project_repository["$(PROJECT)"]' \
+		-target='module.roles.nexus_security_role.role_project_proxy["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_apt_hosted.apt_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_docker_hosted.docker_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_helm_hosted.helm_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_maven_hosted.maven_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_npm_hosted.npm_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_pypi_hosted.pypi_hosted["$(PROJECT)"]' \
+		-target='module.repositories.nexus_repository_raw_hosted.raw_hosted["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_apt_proxy.apt_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_docker_proxy.docker_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_helm_proxy.helm_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_maven_proxy.maven_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_npm_proxy.npm_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_pypi_proxy.pypi_proxy["$(PROJECT)"]' \
+		-target='module.proxies.nexus_repository_raw_proxy.raw_proxy["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_docker_group.docker_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_maven_group.maven_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_npm_group.npm_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_pypi_group.pypi_repositories_group["$(PROJECT)"]' \
+		-target='module.repositories-group.nexus_repository_raw_group.raw_repositories_group["$(PROJECT)"]'
+
 destroy: check compile-jsonnet ## Destroy all Terraform resources (with confirmation)
 	@echo "💥 Destroying configuration..."
 	@echo "⚠️  WARNING: This will destroy ALL configuration!"
