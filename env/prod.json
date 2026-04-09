@@ -5,27 +5,13 @@
     "secretsmanager_address": "https://secretsmanager.eclipse.org",
     "secretsmanager_path": "repo.eclipse.org",
     "defaults": {
-    //   "repositories": {
-    //     "docker": {
-    //       "storage": {
-    //         "blob_store_name": "docker"
-    //       }
-    //     }
-    //   },
-    //   "proxies": {
-    //     "docker": {
-    //       "storage": {
-    //         "blob_store_name": "docker"
-    //       }
-    //     }
-    //   },
-    //   "groups": {
-    //     "docker": {
-    //       "storage": {
-    //         "blob_store_name": "docker"
-    //       }
-    //     }
-    //   }
+      "groups": {
+        "maven2": {
+          "storage": {
+            "blob_store_name": "blobs-proxy-maven2"
+          }
+        }
+      }
     },
     "global_groups": [
       {
