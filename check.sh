@@ -48,6 +48,33 @@ else
 	echo "  ✅ Configuration file $TF_VAR_FILE found"
 fi
 
+# Check Nexus authentication
+if [ -n "$NEXUS_USERNAME" ] && [ -n "$NEXUS_PASSWORD" ]; then
+	if command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+		if [ -f "$TF_VAR_FILE" ]; then
+			NEXUS_URL=$(jq -r '.repo_address // empty' "$TF_VAR_FILE")
+			if [ -z "$NEXUS_URL" ]; then
+				NEXUS_URL="${NEXUS_URL:-http://127.0.0.1:8080}"
+			fi
+			
+			echo "  🔐 Testing Nexus authentication at $NEXUS_URL..."
+			HTTP_CODE=$(curl -I -s -o /dev/null -w "%{http_code}" \
+				-u "$NEXUS_USERNAME:$NEXUS_PASSWORD" \
+				"$NEXUS_URL/service/rest/v1/repositories" 2>/dev/null || echo "000")
+			
+			if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
+				echo "  ✅ Nexus authentication successful (HTTP $HTTP_CODE)"
+			else
+				echo "  ❌ Nexus authentication failed (HTTP $HTTP_CODE)"
+				echo "     Check your NEXUS_USERNAME and NEXUS_PASSWORD"
+				errors=$((errors + 1))
+			fi
+		fi
+	else
+		echo "  ⚠️  curl or jq not found, skipping Nexus authentication test"
+	fi
+fi
+
 # Check Jsonnet
 if ! command -v jsonnet >/dev/null 2>&1; then
 	echo "  ⚠️  Jsonnet is not installed (will use pre-compiled JSON)"
