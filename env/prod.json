@@ -66,7 +66,8 @@
         },
         "storage": {
           "blob_store_name": "blobs-proxy-maven2",
-          "strict_content_type_validation": true
+          "strict_content_type_validation": true,
+          "blobstore_soft_quota_limit": 95
         },
         "negative_cache": {
           "enabled": true,
@@ -471,6 +472,7 @@
     { "id": "technology.scout", "template": "maven2Standard" },
     { "id": "technology.sensinact", "template": "maven2Standard" },
     { "id": "technology.sw360", "template": "maven2Standard", "blobstore_soft_quota_limit": 95 },
+    { "id": "technology.tm4e", "template": "maven2Standard" },
     { "id": "technology.tycho", "template": "maven2Standard" },
     { "id": "tools.andmore", "template": "maven2Standard", "archived": true },
     { "id": "tools.linuxtools", "template": "maven2Standard" },
@@ -501,7 +503,6 @@
       }
     },
     { "id": "tools.ptp", "template": "maven2Standard", "archived": true },
-    { "id": "tools.tm4e", "template": "maven2Standard" },
     { "id": "webtools", "template": "maven2Standard" }
   ]
 }
