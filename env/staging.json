@@ -2,28 +2,152 @@
   "config": {
     "repo_address": "https://repo-staging.eclipse.org",
     "repo_insecure": false,
-    "secretsmanager_address": "https://secretsmanager-staging.eclipse.org",
-    "secretsmanager_path": "repo.eclipse.org",
-    "defaults": {}
-  },
-  "projects": [
-    {
-      "id": "automotive.tractusx",
-      "template": "custom",
-      "config": {
-        "project_id": "automotive.tractusx",
-        "repositories": [
-          {
-            "type": "helm"
-          }
-        ],
-        "proxies": [
-          {
-            "type": "helm"
-          }
+    "secretsmanager_address": "https://secretsmanager.eclipse.org",
+    "secretsmanager_path": "repo-staging.eclipse.org",
+    "defaults": {
+      //   "repositories": {
+      //     "docker": {
+      //       "storage": {
+      //         "blob_store_name": "docker"
+      //       }
+      //     }
+      //   },
+      //   "proxies": {
+      //     "docker": {
+      //       "storage": {
+      //         "blob_store_name": "docker"
+      //       }
+      //     }
+      //   },
+      //   "groups": {
+      //     "docker": {
+      //       "storage": {
+      //         "blob_store_name": "docker"
+      //       }
+      //     }
+      //   }
+    },
+    "global_groups": [
+      {
+        "type": "maven2",
+        "custom_name": "maven2-releases",
+        "include_type_in_name": false,
+        "auto_collect": {
+          "env": "releases",
+          "type": "maven2"
+        }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven2-snapshots",
+        "include_type_in_name": false,
+        "auto_collect": {
+          "env": "snapshots",
+          "type": "maven2"
+        }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven-central",
+        "include_type_in_name": false,
+        "members": [
+          "maven-central-releases-proxy",
+          "maven-central-snapshots-proxy",
+          "maven2-releases",
+          "maven2-snapshots"
         ]
       }
-    },
+    ],
+    "global_proxies": [
+      {
+        "type": "maven2",
+        "custom_name": "maven-central-releases",
+        "include_type_in_name": false,
+        "remote_url": "https://repo1.maven.org/maven2/",
+        "maven": {
+          "version_policy": "RELEASE",
+          "layout_policy": "STRICT"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-maven2",
+          "strict_content_type_validation": true,
+          "blobstore_soft_quota_limit": 95
+        },
+        "negative_cache": {
+          "enabled": true,
+          "ttl": 10
+        },
+        "proxy": {
+          "metadata_max_age": 60
+        }
+      },
+      {
+        "type": "maven2",
+        "custom_name": "maven-central-snapshots",
+        "include_type_in_name": false,
+        "remote_url": "https://central.sonatype.com/repository/maven-snapshots/",
+        "maven": {
+          "version_policy": "SNAPSHOT",
+          "layout_policy": "STRICT"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-maven2",
+          "strict_content_type_validation": true
+        },
+        "negative_cache": {
+          "enabled": true,
+          "ttl": 10
+        },
+        "proxy": {
+          "metadata_max_age": 60
+        }
+      },
+      {
+        "type": "npm",
+        "custom_name": "npm",
+        "include_type_in_name": false,
+        "remote_url": "https://registry.npmjs.org",
+        "storage": {
+          "blob_store_name": "blobs-proxy-npm"
+        }
+      },
+      {
+        "type": "pypi",
+        "custom_name": "pypi",
+        "include_type_in_name": false,
+        "remote_url": "https://pypi.org",
+        "storage": {
+          "blob_store_name": "blobs-proxy-pypi"
+        }
+      },
+      {
+        "type": "docker",
+        "custom_name": "docker",
+        "include_type_in_name": false,
+        "remote_url": "https://registry-1.docker.io",
+        "docker": {
+          "force_basic_auth": true,
+          "v1_enabled": false
+        },
+        "docker_proxy": {
+          "index_type": "HUB"
+        },
+        "storage": {
+          "blob_store_name": "blobs-proxy-docker"
+        }
+      },
+      {
+        "type": "helm",
+        "custom_name": "helm",
+        "include_type_in_name": false,
+        "remote_url": "https://charts.helm.sh/stable",
+        "storage": {
+          "blob_store_name": "blobs-proxy-helm"
+        }
+      }
+    ]
+  },
+  "projects": [
     {
       "id": "technology.cbi",
       "template": "custom",
@@ -31,7 +155,44 @@
         "project_id": "technology.cbi",
         "repositories": [
           {
-            "type": "docker"
+            "type": "docker",
+            "env": "internal"
+          },
+          {
+            "type": "npm",
+            "env": "internal"
+          },
+          {
+            "type": "pypi",
+            "env": "internal"
+          },
+          {
+            "type": "helm",
+            "env": "internal"
+          },
+          {
+            "type": "maven2",
+            "env": "releases",
+            "maven": {
+              "version_policy": "RELEASE",
+              "layout_policy": "STRICT"
+            }
+          },
+          {
+            "type": "maven2",
+            "env": "snapshots",
+            "maven": {
+              "version_policy": "SNAPSHOT",
+              "layout_policy": "STRICT"
+            }
+          },
+          {
+            "type": "maven2",
+            "env": "staging",
+            "maven": {
+              "version_policy": "MIXED",
+              "layout_policy": "STRICT"
+            }
           }
         ],
         "proxies": [
@@ -48,62 +209,10 @@
             "type": "helm"
           },
           {
-            "type": "maven2",
-            "proxy": {
-              "remote_url": "http://localhost:8081"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": "technology.csi",
-      "template": "custom",
-      "config": {
-        "project_id": "technology.csi",
-        "groups": [
-          {
-            "type": "docker",
-            "docker": {
-              "force_basic_auth": false,
-              "http_port": 8080,
-              "https_port": 8433,
-              "v1_enabled": true
-            },
-            "storage": {
-              "blob_store_name": "default",
-              "strict_content_type_validation": true
-            }
-          }
-        ],
-        "proxies": [
-          {
-            "name": "sonatype_iq",
-            "type": "docker"
-          },
-          {
-            "name": "sonatype_iq",
             "type": "maven2"
           }
         ],
-        "repositories": [
-          {
-            "name": "sonatype_iq",
-            "type": "docker",
-            "env": [
-              "production",
-              "staging"
-            ]
-          },
-          {
-            "name": "sonatype_iq",
-            "type": "maven2",
-            "env": [
-              "release",
-              "snapshot"
-            ]
-          }
-        ]
+        "create_group_auto": true
       }
     }
   ]
