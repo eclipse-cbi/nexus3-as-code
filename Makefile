@@ -1,5 +1,5 @@
 # Makefile for GitLab OVHcloud Infrastructure 
-.PHONY: help init plan apply destroy validate fmt clean status outputs compile-jsonnet
+.PHONY: help init select setup plan apply destroy validate fmt clean status outputs compile-jsonnet
 
 # Variables
 JSONNET_FILE ?= env/terraform.$(NEXUS_ENV).tfvars.jsonnet
@@ -15,11 +15,19 @@ check: ## Check prerequisites and environment
 
 init: ## Initialize Terraform backend
 	@echo "🚀 Initializing Terraform..."
-	terraform init -backend-config=./backend/backend.$(NEXUS_ENV).hcl
+	@rm -f .terraform/environment
+	@terraform init -reconfigure -backend-config=./backend/backend.$(NEXUS_ENV).hcl
 
 select: ## Select or create Terraform workspace
 	@echo "🔄 Selecting Terraform workspace..."
-	@terraform workspace select $(NEXUS_ENV) || terraform workspace new $(NEXUS_ENV)
+	@terraform workspace select -or-create $(NEXUS_ENV) || terraform workspace new $(NEXUS_ENV)
+
+setup: ## Initialize backend and select/create workspace (one-command setup)
+	@echo "🚀 Setting up environment: $(NEXUS_ENV)"
+	@rm -f .terraform/environment
+	@terraform init -reconfigure -backend-config=./backend/backend.$(NEXUS_ENV).hcl
+	@terraform workspace select $(NEXUS_ENV) 2>/dev/null || terraform workspace new $(NEXUS_ENV)
+	@echo "✅ Setup complete for environment: $(NEXUS_ENV)"
 
 validate: init ## Validate Terraform configuration
 	@echo "✅ Validating configuration..."

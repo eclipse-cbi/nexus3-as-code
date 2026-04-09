@@ -100,6 +100,7 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
       - [2. Permission Denied](#2-permission-denied)
       - [3. State Lock Errors](#3-state-lock-errors)
       - [4. Jsonnet Compilation Errors](#4-jsonnet-compilation-errors)
+      - [5. Changing to a different env](#5-changing-to-a-different-env)
     - [Debugging Tips](#debugging-tips)
       - [Enable Verbose Logging](#enable-verbose-logging)
       - [Verify Resource Configuration](#verify-resource-configuration)
@@ -126,20 +127,15 @@ This code is based on the Nexus Provider: https://registry.terraform.io/provider
 
 2. **Source the environment**:
    ```bash
-   . ./.env.sh
+   source .env.sh
    ```
 
-3. **Initialize Terraform**:
+3. **Initialize Terraform and create workspace**:
    ```bash
-   make init
+   make setup
    ```
 
-4. **Select or create workspace**:
-   ```bash
-   make select
-   ```
-
-5. **Plan and apply**:
+4. **Plan and apply**:
    ```bash
    make plan
    make apply
@@ -156,6 +152,7 @@ This project uses a `Makefile` to simplify Terraform operations. **Always use `m
 | Command | Description | What it does |
 |---------|-------------|-------------|
 | `make help` | Show all available commands | Lists all make targets with descriptions |
+| `make setup` | **Quick setup** | Initializes backend and creates/selects workspace (one command) |
 | `make init` | Initialize Terraform | Runs `terraform init` with correct backend config |
 | `make select` | Select/create workspace | Selects workspace or creates if doesn't exist |
 | `make validate` | Validate configuration | Checks Terraform syntax and configuration |
@@ -1574,9 +1571,10 @@ vault kv get -mount="cbi" "<project_id>/repo.eclipse.org"
 
 **Solution**:
 ```bash
-# Set environment and use make
+# Set environment and use make setup (recommended)
 export NEXUS_ENV="prod"
-make select
+source .env.sh
+make setup
 
 # Or manually with terraform
 terraform workspace new prod
@@ -1622,6 +1620,36 @@ jsonnet env/terraform.prod.tfvars.jsonnet
 
 # Check for syntax errors
 jsonnetfmt --test env/terraform.prod.tfvars.jsonnet
+```
+
+#### 5. Changing to a different env
+
+```shell
+terraform init -backend-config=./backend/backend.staging.hcl
+Initializing the backend...
+Initializing modules...
+╷
+│ Error: Backend configuration changed
+│ 
+│ A change in the backend configuration has been detected, which may require migrating existing state.
+│ 
+│ If you wish to attempt automatic migration of the state, use "terraform init -migrate-state".
+│ If you wish to store the current configuration with no changes to the state, use "terraform init
+│ -reconfigure".
+```
+
+**Solution**: Use `make setup` which handles this automatically:
+
+```bash
+export NEXUS_ENV="staging"
+source .env.sh
+make setup
+```
+
+Or run manually:
+
+```shell
+terraform init -reconfigure -backend-config=./backend/backend.staging.hcl
 ```
 
 ### Debugging Tips
