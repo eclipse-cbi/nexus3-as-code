@@ -45,6 +45,8 @@ variable "global_proxies" {
     storage = optional(object({
       blob_store_name                = optional(string)
       strict_content_type_validation = optional(bool)
+      blobstore_soft_quota_limit     = optional(number)
+      blobstore_soft_quota_type      = optional(string)
     }))
     cleanup = optional(object({
       policy_names = optional(list(string))

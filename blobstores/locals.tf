@@ -17,8 +17,8 @@ locals {
     for proxy in var.global_proxies : 
       try(proxy.storage.blob_store_name, "default") => {
         name             = try(proxy.storage.blob_store_name, "default")
-        soft_quota_limit = try(proxy.storage.soft_quota_limit, var.default_soft_quota_limit)
-        soft_quota_type  = try(proxy.storage.soft_quota_type, var.default_soft_quota_type)
+        soft_quota_limit = coalesce(try(proxy.storage.blobstore_soft_quota_limit, null), var.default_soft_quota_limit)
+        soft_quota_type  = coalesce(try(proxy.storage.blobstore_soft_quota_type, null), var.default_soft_quota_type)
       }...
     if try(proxy.storage.blob_store_name, "default") != "default"
   }

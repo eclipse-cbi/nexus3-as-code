@@ -74,7 +74,8 @@
         },
         "storage": {
           "blob_store_name": "blobs-proxy-maven2",
-          "strict_content_type_validation": true
+          "strict_content_type_validation": true,
+          "blobstore_soft_quota_limit": 95
         },
         "negative_cache": {
           "enabled": true,
